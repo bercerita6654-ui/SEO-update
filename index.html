@@ -1038,14 +1038,14 @@
             
             if (state.subjectMode === 'model') {
                 if (isMulti) {
-                    promptGbr = `Create a 4-panel grid photo collage of a person showcasing ${productName}. CRITICAL INSTRUCTION: You MUST strictly PRESERVE the exact original face, facial features, hair, and body shape perfectly from the source image. DO NOT alter the person's identity, it must look like the exact same person.\n\n`;
+                    promptGbr = `Create a 4-panel grid photo collage of a person showcasing ${productName}. CRITICAL INSTRUCTION: Maintain 100% absolute character consistency. You MUST strictly PRESERVE the exact original facial structure, eye shape, nose, mouth, jawline, hair, and body shape perfectly from the source image. The face MUST remain absolutely identical to the original input. DO NOT morph, beautify, or alter the person's facial identity in any way.\n\n`;
                     promptGbr += `1. Full Portrait: Standing in a ${state.background}, even soft lighting, looking natural.\n`;
                     promptGbr += `2. Detail Shot: Close-up on the ${productName} worn by the person, shallow depth of field.\n`;
                     promptGbr += `3. Lifestyle Context: Person interacting in a ${state.background}, accompanied by ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting.\n`;
                     promptGbr += `4. Creative Angle: Dynamic ${state.angle}, dramatic lighting to provide a premium feel.\n\n`;
                     promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
                 } else {
-                    promptGbr = `Photorealistic portrait of a person showcasing ${productName}. CRITICAL INSTRUCTION: You MUST strictly PRESERVE the exact original face, facial features, hair, skin tone, and body shape perfectly. DO NOT morph or change the person's identity. Camera Angle: ${state.angle}. `;
+                    promptGbr = `Photorealistic portrait of a person showcasing ${productName}. CRITICAL INSTRUCTION: Maintain 100% absolute character consistency. You MUST strictly PRESERVE the exact original facial structure, eye shape, nose, mouth, jawline, hair, and skin tone perfectly. The face MUST remain absolutely identical to the original input. DO NOT morph, beautify, or alter the person's facial identity in any way. Camera Angle: ${state.angle}. `;
                     promptGbr += `Style: ${state.style}. Vibe: ${state.vibe}. Setting: Placed in a ${state.background}. Lighting: Illuminated by ${state.lighting}. Color Palette: ${state.color}. `;
                     if (propsVal !== '-' && propsVal !== '') promptGbr += `Additional elements: Featuring ${propsVal}. `;
                     promptGbr += `Highly detailed, 8k resolution, photorealistic masterpiece, realistic skin texture, raw photo.`;

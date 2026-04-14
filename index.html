@@ -74,6 +74,17 @@
                          MENU 1: VISUAL (GAMBAR AI)
                          ========================================== -->
                     <div id="menuVisual" class="space-y-5">
+                        
+                        <!-- Mode Subjek -->
+                        <div class="flex p-1 bg-slate-100 rounded-xl mb-2 border border-slate-200">
+                            <button id="modeProduct" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-sm transition-all outline-none">
+                                <i data-lucide="box" class="w-4 h-4"></i> Fokus Produk
+                            </button>
+                            <button id="modeModel" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-700 transition-all outline-none">
+                                <i data-lucide="user-square-2" class="w-4 h-4"></i> Fokus Model (Kunci Identitas)
+                            </button>
+                        </div>
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Gaya Visual</label>
@@ -440,6 +451,9 @@
 
     <!-- Script Logika -->
     <script>
+        // API KEY SETUP
+        const apiKey = "";
+
         /* ===================================================================
            DATA & OPTIONS
            =================================================================== */
@@ -545,6 +559,7 @@
            STATE MANAJEMEN & LOCAL STORAGE
            =================================================================== */
         const state = {
+            subjectMode: 'product',
             style: VISUAL_OPTIONS.style[0].value,
             vibe: VISUAL_OPTIONS.vibe[0].value,
             background: VISUAL_OPTIONS.background[0].value,
@@ -587,6 +602,33 @@
         igIcons.white.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>`);
         igIcons.black.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>`);
 
+        /* ===================================================================
+           LOGIKA ERROR HANDLER
+           =================================================================== */
+        const errorMsg = document.getElementById('errorMsg');
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.classList.remove('hidden');
+            // Auto hide after 5 seconds
+            setTimeout(() => hideError(), 5000);
+        }
+        function hideError() {
+            errorMsg.classList.add('hidden');
+        }
+
+        function updateSubjectModeUI() {
+            const btnProduct = document.getElementById('modeProduct');
+            const btnModel = document.getElementById('modeModel');
+            if (!btnProduct || !btnModel) return;
+            if (state.subjectMode === 'product') {
+                btnProduct.className = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-sm transition-all outline-none";
+                btnModel.className = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-700 transition-all outline-none";
+            } else {
+                btnProduct.className = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-700 transition-all outline-none";
+                btnModel.className = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold bg-white text-blue-600 shadow-sm transition-all outline-none";
+            }
+            lucide.createIcons({ root: btnProduct.parentElement });
+        }
 
         function saveToStorage() {
             const dataToSave = {
@@ -625,6 +667,8 @@
                 } catch(e) {}
             }
             
+            if (state.subjectMode) updateSubjectModeUI();
+
             const modelEnableCheck = document.getElementById('modelEnable');
             const modelContainer = document.getElementById('modelContainer');
             if (modelEnableCheck && modelContainer) {
@@ -712,6 +756,9 @@
         createDropdown('dropdown-modelEthnicity', 'modelEthnicity');
         createDropdown('dropdown-modelPlacement', 'modelPlacement');
 
+        document.getElementById('modeProduct').addEventListener('click', () => { state.subjectMode = 'product'; updateSubjectModeUI(); saveToStorage(); });
+        document.getElementById('modeModel').addEventListener('click', () => { state.subjectMode = 'model'; updateSubjectModeUI(); saveToStorage(); });
+
         const modelEnableCheck = document.getElementById('modelEnable');
         const modelContainer = document.getElementById('modelContainer');
         modelEnableCheck.addEventListener('change', (e) => {
@@ -720,7 +767,6 @@
             else modelContainer.classList.add('hidden');
             saveToStorage();
         });
-
 
         function renderAudience() {
             const container = document.getElementById('audienceContainer');
@@ -970,18 +1016,6 @@
         document.getElementById('tabGrid').addEventListener('click', () => switchMode('grid'));
 
         /* ===================================================================
-           LOGIKA ERROR HANDLER
-           =================================================================== */
-        const errorMsg = document.getElementById('errorMsg');
-        function showError(msg) {
-            errorMsg.textContent = msg;
-            errorMsg.classList.remove('hidden');
-        }
-        function hideError() {
-            errorMsg.classList.add('hidden');
-        }
-
-        /* ===================================================================
            SISTEM 1: GENERATE VISUAL 
            =================================================================== */
         document.getElementById('generateVisualBtn').addEventListener('click', () => {
@@ -998,24 +1032,40 @@
             let promptGbr = "";
             let modelContext = "";
 
-            if (state.modelEnable) {
+            if (state.modelEnable && state.subjectMode === 'product') {
                 modelContext = `The product is being used/worn by a ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model. The product is prominently featured on the ${state.modelPlacement}. `;
             }
             
-            if (isMulti) {
-                promptGbr = `Create a 4-panel grid photo collage of ${productName} featuring 4 completely different compositions:\n\n`;
-                promptGbr += `1. Main Catalog: Straight front view, clean solid background, even soft lighting with no harsh shadows, full focus on the entire product. ${state.modelEnable ? `Model is posing naturally.` : ''}\n`;
-                promptGbr += `2. Macro Detail: Extreme close-up shot highlighting the texture and fine details, shallow depth of field with a beautiful bokeh background. ${state.modelEnable ? `Focusing closely on the ${state.modelPlacement} area of the model.` : ''}\n`;
-                promptGbr += `3. Lifestyle Context: Product placed on a ${state.background}, accompanied by props like ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting. ${state.modelEnable ? `Model interacting with the product in a lifestyle setting.` : ''}\n`;
-                promptGbr += `4. Creative Angle: Top-down flat lay or dynamic low angle, dramatic lighting with harsh shadows to provide a premium and elegant feel. ${state.modelEnable ? `Creative framing emphasizing the product on the model.` : ''}\n\n`;
-                if (state.modelEnable) promptGbr += `Model details: ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model.\n`;
-                promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
+            if (state.subjectMode === 'model') {
+                if (isMulti) {
+                    promptGbr = `Create a 4-panel grid photo collage of a person showcasing ${productName}. CRITICAL INSTRUCTION: You MUST strictly PRESERVE the exact original face, facial features, hair, and body shape perfectly from the source image. DO NOT alter the person's identity, it must look like the exact same person.\n\n`;
+                    promptGbr += `1. Full Portrait: Standing in a ${state.background}, even soft lighting, looking natural.\n`;
+                    promptGbr += `2. Detail Shot: Close-up on the ${productName} worn by the person, shallow depth of field.\n`;
+                    promptGbr += `3. Lifestyle Context: Person interacting in a ${state.background}, accompanied by ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting.\n`;
+                    promptGbr += `4. Creative Angle: Dynamic ${state.angle}, dramatic lighting to provide a premium feel.\n\n`;
+                    promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
+                } else {
+                    promptGbr = `Photorealistic portrait of a person showcasing ${productName}. CRITICAL INSTRUCTION: You MUST strictly PRESERVE the exact original face, facial features, hair, skin tone, and body shape perfectly. DO NOT morph or change the person's identity. Camera Angle: ${state.angle}. `;
+                    promptGbr += `Style: ${state.style}. Vibe: ${state.vibe}. Setting: Placed in a ${state.background}. Lighting: Illuminated by ${state.lighting}. Color Palette: ${state.color}. `;
+                    if (propsVal !== '-' && propsVal !== '') promptGbr += `Additional elements: Featuring ${propsVal}. `;
+                    promptGbr += `Highly detailed, 8k resolution, photorealistic masterpiece, realistic skin texture, raw photo.`;
+                }
             } else {
-                promptGbr = `Professional product photography of ${productName}. Camera Angle: ${state.angle}. `;
-                promptGbr += modelContext;
-                promptGbr += `Style: ${state.style}. Vibe: ${state.vibe}. Setting: Placed on a ${state.background}. Lighting: Illuminated by ${state.lighting}. Color Palette: ${state.color}. `;
-                if (propsVal !== '-' && propsVal !== '') promptGbr += `Additional elements: Featuring ${propsVal}. `;
-                promptGbr += `Highly detailed, 8k resolution, photorealistic, commercial photography masterpiece, unreal engine 5 render style.`;
+                if (isMulti) {
+                    promptGbr = `Create a 4-panel grid photo collage of ${productName} featuring 4 completely different compositions:\n\n`;
+                    promptGbr += `1. Main Catalog: Straight front view, clean solid background, even soft lighting with no harsh shadows, full focus on the entire product. ${state.modelEnable ? `Model is posing naturally.` : ''}\n`;
+                    promptGbr += `2. Macro Detail: Extreme close-up shot highlighting the texture and fine details, shallow depth of field with a beautiful bokeh background. ${state.modelEnable ? `Focusing closely on the ${state.modelPlacement} area of the model.` : ''}\n`;
+                    promptGbr += `3. Lifestyle Context: Product placed on a ${state.background}, accompanied by props like ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting. ${state.modelEnable ? `Model interacting with the product in a lifestyle setting.` : ''}\n`;
+                    promptGbr += `4. Creative Angle: Top-down flat lay or dynamic low angle, dramatic lighting with harsh shadows to provide a premium and elegant feel. ${state.modelEnable ? `Creative framing emphasizing the product on the model.` : ''}\n\n`;
+                    if (state.modelEnable) promptGbr += `Model details: ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model.\n`;
+                    promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
+                } else {
+                    promptGbr = `Professional product photography of ${productName}. Camera Angle: ${state.angle}. `;
+                    promptGbr += modelContext;
+                    promptGbr += `Style: ${state.style}. Vibe: ${state.vibe}. Setting: Placed on a ${state.background}. Lighting: Illuminated by ${state.lighting}. Color Palette: ${state.color}. `;
+                    if (propsVal !== '-' && propsVal !== '') promptGbr += `Additional elements: Featuring ${propsVal}. `;
+                    promptGbr += `Highly detailed, 8k resolution, photorealistic, commercial photography masterpiece, unreal engine 5 render style.`;
+                }
             }
             
             state.generatedPromptGambar = promptGbr;
@@ -1052,7 +1102,6 @@
             document.getElementById('btnTextSeo').textContent = 'Memproses AI...';
             btnSeo.disabled = true;
 
-            const apiKey = "AIzaSyCe1GTXxZM3Wum9y51xE6Gmnj6LkEDZVjA"; 
             const audienceData = AUDIENCES.find(a => a.id === state.audience);
             const marketplaceData = MARKETPLACES.find(m => m.id === state.marketplace);
 
@@ -1108,8 +1157,12 @@
             `;
 
             try {
+                if (!apiKey) {
+                   throw new Error("API Key belum terkonfigurasi pada Environment (const apiKey kosong).");
+                }
+
                 const response = await fetchWithRetry(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1274,7 +1327,7 @@
                 drawPreviewCanvas();
             };
             img.onerror = () => {
-                alert("Gagal memuat gambar dari Drive. Pastikan akses file di-set 'Anyone with the link'.");
+                showError("Gagal memuat gambar dari Drive. Pastikan akses file di-set 'Anyone dengan link'.");
                 e.target.options[e.target.selectedIndex].text = originalText;
             };
             img.src = proxyUrl;
@@ -1630,7 +1683,7 @@
                 }
             } catch (error) {
                 console.error("Gagal mengunduh gambar:", error);
-                alert("Terjadi kesalahan saat mengunduh gambar.");
+                showError("Terjadi kesalahan saat mengunduh gambar.");
             } finally {
                 downloadAllBtn.innerHTML = originalContent;
                 lucide.createIcons({root: downloadAllBtn});
@@ -1797,7 +1850,7 @@
                 
                 // Pastikan batas ukuran aman (28MB)
                 if (blob.size > 28 * 1024 * 1024) {
-                    alert("Perhatian: Ukuran file sedikit melebihi target 28MB.");
+                    showError("Perhatian: Ukuran file sedikit melebihi target 28MB.");
                 }
 
                 // Trigger Download
@@ -1812,7 +1865,7 @@
 
             } catch (error) {
                 console.error("Gagal membuat video:", error);
-                alert("Terjadi kesalahan saat memproses video. Browser Anda mungkin tidak mendukung fitur MediaRecorder ini.");
+                showError("Terjadi kesalahan saat memproses video. Browser Anda mungkin tidak mendukung fitur MediaRecorder ini.");
             } finally {
                 // Kembalikan UI
                 document.getElementById('loadingState').classList.add('hidden');

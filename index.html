@@ -452,6 +452,9 @@
     <!-- Script Logika -->
     <script>
         // API KEY SETUP
+        // CATATAN: Di dalam lingkungan Canvas ini, API Key disuntikkan otomatis oleh sistem.
+        // Jika Anda mengunduh kode ini untuk dijalankan sendiri, ganti variabel di bawah dengan:
+        // const apiKey = "AIzaSyApPJFU7rioLuLBaQ5CVdqz-RguDJuOjv8";
         const apiKey = "";
 
         /* ===================================================================
@@ -1157,10 +1160,6 @@
             `;
 
             try {
-                if (!apiKey) {
-                   throw new Error("API Key belum terkonfigurasi pada Environment (const apiKey kosong).");
-                }
-
                 const response = await fetchWithRetry(
                     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
                     {

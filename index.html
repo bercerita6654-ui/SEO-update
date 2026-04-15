@@ -220,10 +220,10 @@
 
                         <button 
                             id="generateSeoBtn"
-                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 group outline-none disabled:opacity-70 mt-2"
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 group outline-none mt-2"
                         >
-                            <i data-lucide="sparkles" id="btnIconSeo" class="w-5 h-5 group-hover:animate-pulse"></i>
-                            <span id="btnTextSeo">Generate Prompt SEO</span>
+                            <i data-lucide="sparkles" class="w-5 h-5 group-hover:animate-pulse"></i>
+                            <span>Generate Prompt SEO</span>
                         </button>
                     </div>
 
@@ -387,6 +387,12 @@
                         <p class="text-sm text-center max-w-xs" id="emptyDesc">Pilih Menu di sebelah kiri, isi parameter, dan klik Generate untuk melihat hasil.</p>
                     </div>
 
+                    <!-- KONTEN: LOADING -->
+                    <div class="flex-grow flex-col items-center justify-center text-emerald-400 space-y-4 hidden" id="loadingState">
+                        <i data-lucide="loader-2" class="w-16 h-16 animate-spin opacity-80"></i>
+                        <p class="text-sm text-center animate-pulse font-bold text-emerald-300" id="loadingText">Mesin AI Sedang Berjalan...<br/>Meracik Konten.</p>
+                    </div>
+
                     <!-- KONTEN: PROMPT GAMBAR -->
                     <div id="gambarContent" class="hidden flex-grow flex-col h-full">
                         <textarea 
@@ -444,6 +450,8 @@
 
     <!-- Script Logika -->
     <script>
+        const apiKey = "";
+
         /* ===================================================================
            DATA & OPTIONS
            =================================================================== */
@@ -583,7 +591,6 @@
         };
         let draggingLogo = null;
 
-        // Cache SVG IG Icon (Putih & Hitam) untuk menghindar flicker saat dirender canvas
         const igIcons = {
             white: new Image(),
             black: new Image()
@@ -594,15 +601,17 @@
         /* ===================================================================
            LOGIKA ERROR HANDLER
            =================================================================== */
-        const errorMsg = document.getElementById('errorMsg');
         function showError(msg) {
-            errorMsg.textContent = msg;
-            errorMsg.classList.remove('hidden');
-            // Auto hide after 5 seconds
-            setTimeout(() => hideError(), 5000);
+            const errorMsg = document.getElementById('errorMsg');
+            if(errorMsg) {
+                errorMsg.textContent = msg;
+                errorMsg.classList.remove('hidden');
+                setTimeout(() => hideError(), 5000);
+            }
         }
         function hideError() {
-            errorMsg.classList.add('hidden');
+            const errorMsg = document.getElementById('errorMsg');
+            if(errorMsg) errorMsg.classList.add('hidden');
         }
 
         function updateSubjectModeUI() {
@@ -616,7 +625,7 @@
                 btnProduct.className = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-700 transition-all outline-none";
                 btnModel.className = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold bg-white text-blue-600 shadow-sm transition-all outline-none";
             }
-            lucide.createIcons({ root: btnProduct.parentElement });
+            if(lucide) lucide.createIcons({ root: btnProduct.parentElement });
         }
 
         function saveToStorage() {
@@ -641,14 +650,17 @@
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
-                    document.getElementById('productName').value = data.productName || '';
-                    document.getElementById('brandInput').value = data.brandInput || '';
-                    document.getElementById('typeInput').value = data.typeInput || '';
-                    document.getElementById('sizeInput').value = data.sizeInput || '';
-                    document.getElementById('unitInput').value = data.unitInput || '';
-                    document.getElementById('seoUspInput').value = data.seoUspInput || '';
-                    document.getElementById('visualPropsInput').value = data.visualPropsInput || '';
-                    if (document.getElementById('multiAngle')) document.getElementById('multiAngle').checked = data.multiAngle || false;
+                    const safeSetVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; }
+                    safeSetVal('productName', data.productName || '');
+                    safeSetVal('brandInput', data.brandInput || '');
+                    safeSetVal('typeInput', data.typeInput || '');
+                    safeSetVal('sizeInput', data.sizeInput || '');
+                    safeSetVal('unitInput', data.unitInput || '');
+                    safeSetVal('seoUspInput', data.seoUspInput || '');
+                    safeSetVal('visualPropsInput', data.visualPropsInput || '');
+                    
+                    const mAng = document.getElementById('multiAngle');
+                    if (mAng) mAng.checked = data.multiAngle || false;
                     
                     if (data.state) {
                         Object.assign(state, data.state);
@@ -662,7 +674,11 @@
             const modelContainer = document.getElementById('modelContainer');
             if (modelEnableCheck && modelContainer) {
                 modelEnableCheck.checked = state.modelEnable;
-                if (state.modelEnable) modelContainer.classList.remove('hidden');
+                if (state.modelEnable) {
+                    modelContainer.classList.remove('hidden');
+                } else {
+                    modelContainer.classList.add('hidden');
+                }
             }
         }
 
@@ -671,13 +687,13 @@
                 const el = document.getElementById(id);
                 if (el) el.addEventListener('input', saveToStorage);
             });
-            document.getElementById('multiAngle')?.addEventListener('change', saveToStorage);
+            const mAng = document.getElementById('multiAngle');
+            if(mAng) mAng.addEventListener('change', saveToStorage);
         });
 
         /* ===================================================================
            UI RENDERERS (Dropdowns, Buttons, dll)
            =================================================================== */
-        
         function createDropdown(containerId, dataKey) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -713,7 +729,7 @@
                         ` : ''}
                     </div>
                 `;
-                lucide.createIcons({ root: container });
+                if(lucide) lucide.createIcons({ root: container });
                 
                 container.querySelector('.dropdown-btn').addEventListener('click', () => { isOpen = !isOpen; render(); });
                 if (isOpen) {
@@ -745,20 +761,26 @@
         createDropdown('dropdown-modelEthnicity', 'modelEthnicity');
         createDropdown('dropdown-modelPlacement', 'modelPlacement');
 
-        document.getElementById('modeProduct').addEventListener('click', () => { state.subjectMode = 'product'; updateSubjectModeUI(); saveToStorage(); });
-        document.getElementById('modeModel').addEventListener('click', () => { state.subjectMode = 'model'; updateSubjectModeUI(); saveToStorage(); });
+        const mdProd = document.getElementById('modeProduct');
+        if(mdProd) mdProd.addEventListener('click', () => { state.subjectMode = 'product'; updateSubjectModeUI(); saveToStorage(); });
+        
+        const mdMod = document.getElementById('modeModel');
+        if(mdMod) mdMod.addEventListener('click', () => { state.subjectMode = 'model'; updateSubjectModeUI(); saveToStorage(); });
 
         const modelEnableCheck = document.getElementById('modelEnable');
         const modelContainer = document.getElementById('modelContainer');
-        modelEnableCheck.addEventListener('change', (e) => {
-            state.modelEnable = e.target.checked;
-            if (e.target.checked) modelContainer.classList.remove('hidden');
-            else modelContainer.classList.add('hidden');
-            saveToStorage();
-        });
+        if(modelEnableCheck) {
+            modelEnableCheck.addEventListener('change', (e) => {
+                state.modelEnable = e.target.checked;
+                if (e.target.checked) modelContainer?.classList.remove('hidden');
+                else modelContainer?.classList.add('hidden');
+                saveToStorage();
+            });
+        }
 
         function renderAudience() {
             const container = document.getElementById('audienceContainer');
+            if(!container) return;
             container.innerHTML = AUDIENCES.map(aud => `
                 <button type="button" onclick="setAudience('${aud.id}')" class="p-2 rounded-xl border text-left transition-all flex flex-col items-start ${state.audience === aud.id ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-200' : 'border-slate-200 bg-white hover:bg-slate-50'}">
                     <div class="flex items-center gap-1.5 mb-1">
@@ -767,13 +789,14 @@
                     </div>
                 </button>
             `).join('');
-            lucide.createIcons({ root: container });
+            if(lucide) lucide.createIcons({ root: container });
         }
         window.setAudience = (id) => { state.audience = id; renderAudience(); saveToStorage(); };
         renderAudience();
 
         function renderMarketplace() {
             const container = document.getElementById('marketplaceContainer');
+            if(!container) return;
             container.innerHTML = MARKETPLACES.map(m => `
                 <button type="button" onclick="setMarketplace('${m.id}')" class="flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all ${state.marketplace === m.id ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}">
                     ${m.label}
@@ -788,16 +811,18 @@
         const keywordTagsList = document.getElementById('keywordTagsList');
 
         function renderKeywords() {
+            if(!keywordTagsList) return;
             keywordTagsList.innerHTML = state.keywords.map((kw, i) => `
                 <span class="keyword-pill px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-md border border-emerald-200 flex items-center gap-1">
                     ${kw} <button type="button" onclick="removeKeyword(${i})" class="hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button>
                 </span>
             `).join('');
-            lucide.createIcons({ root: keywordTagsList });
+            if(lucide) lucide.createIcons({ root: keywordTagsList });
         }
         window.removeKeyword = (index) => { state.keywords.splice(index, 1); renderKeywords(); saveToStorage(); };
         
         function addKeyword() {
+            if(!keywordInput) return;
             const val = keywordInput.value.trim();
             if (val && !state.keywords.includes(val) && state.keywords.length < 5) {
                 state.keywords.push(val);
@@ -806,8 +831,8 @@
                 saveToStorage();
             }
         }
-        addKeywordBtn.addEventListener('click', addKeyword);
-        keywordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addKeyword(); });
+        if(addKeywordBtn) addKeywordBtn.addEventListener('click', addKeyword);
+        if(keywordInput) keywordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addKeyword(); });
         renderKeywords();
 
         const RATIOS = [
@@ -829,26 +854,31 @@
             state.gridAspectRatio = id; 
             renderGridRatio(); 
             
-            // Tampilkan menu logo khusus 9:16
             const logoSec = document.getElementById('logoUploadSection');
-            if(id === '9:16') {
-                logoSec.classList.remove('hidden');
-                drawPreviewCanvas(); 
-            } else {
-                logoSec.classList.add('hidden');
+            if(logoSec) {
+                if(id === '9:16') {
+                    logoSec.classList.remove('hidden');
+                    drawPreviewCanvas(); 
+                } else {
+                    logoSec.classList.add('hidden');
+                }
             }
-            
             saveToStorage(); 
         };
         renderGridRatio();
 
         const multiAngleCheck = document.getElementById('multiAngle');
         const angleContainer = document.getElementById('angle-container');
-        multiAngleCheck.addEventListener('change', (e) => {
-            angleContainer.classList.toggle('opacity-50', e.target.checked);
-            angleContainer.classList.toggle('pointer-events-none', e.target.checked);
-        });
-        if(multiAngleCheck.checked) { angleContainer.classList.add('opacity-50', 'pointer-events-none'); }
+        if(multiAngleCheck && angleContainer) {
+            multiAngleCheck.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    angleContainer.classList.add('opacity-50', 'pointer-events-none');
+                } else {
+                    angleContainer.classList.remove('opacity-50', 'pointer-events-none');
+                }
+            });
+            if(multiAngleCheck.checked) { angleContainer.classList.add('opacity-50', 'pointer-events-none'); }
+        }
 
         /* ===================================================================
            DATA SPREADSHEET (CSV FETCH)
@@ -860,6 +890,7 @@
         const CSV_BRAND_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQb3c5Q6TVKPGW0MJKD5Bq97j3YP3QCQHCqNzoa4E1c2C4K5e1_yLgJlggb1OWCsx7XXPEWCbsUU6iC/pub?output=csv';
 
         async function fetchDatabase(url, selectElement) {
+            if(!selectElement) return;
             try {
                 const res = await fetch(url);
                 if(!res.ok) throw new Error("Gagal mengambil data");
@@ -906,7 +937,7 @@
         fetchDatabase(CSV_BRAND_URL, dbBrandSelect);
 
         /* ===================================================================
-           TABS MANAJEMEN (SINKRONISASI KIRI & KANAN)
+           TABS MANAJEMEN (SINKRONISASI KIRI & KANAN) SECURE NULL CHECK
            =================================================================== */
         function switchMode(mode, keepError = false) {
             state.activeTab = mode;
@@ -918,167 +949,192 @@
 
             const activeNavClass = "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs sm:text-sm font-bold bg-white shadow-sm transition-all outline-none";
             const inactiveNavClass = "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs sm:text-sm font-bold text-slate-500 hover:text-slate-700 transition-all outline-none";
-
-            document.getElementById('navVisual').className = inactiveNavClass;
-            document.getElementById('navSeo').className = inactiveNavClass;
-            document.getElementById('navGrid').className = inactiveNavClass;
-
-            if (isVis) document.getElementById('navVisual').className = activeNavClass + " text-blue-600";
-            if (isSeo) document.getElementById('navSeo').className = activeNavClass + " text-emerald-600";
-            if (isGrid) document.getElementById('navGrid').className = activeNavClass + " text-indigo-600";
-
-            document.getElementById('menuVisual').style.display = isVis ? 'block' : 'none';
-            document.getElementById('menuSeo').style.display = isSeo ? 'block' : 'none';
-            document.getElementById('menuGrid').style.display = isGrid ? 'block' : 'none';
-
             const activeTabClass = "flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors outline-none";
             const inactiveTabClass = "flex items-center space-x-2 px-4 py-2 bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded-xl text-sm font-bold transition-colors border border-transparent outline-none";
 
-            document.getElementById('tabGambar').className = inactiveTabClass;
-            document.getElementById('tabDeskripsi').className = inactiveTabClass;
-            document.getElementById('tabGrid').className = inactiveTabClass;
+            // Safe DOM modifiers
+            const setClass = (id, cls) => { const el = document.getElementById(id); if(el) el.className = cls; };
+            const setStyle = (id, prop, val) => { const el = document.getElementById(id); if(el) el.style[prop] = val; };
+            const addClass = (id, cls) => { const el = document.getElementById(id); if(el) el.classList.add(cls); };
+            const rmClass = (id, cls) => { const el = document.getElementById(id); if(el) el.classList.remove(cls); };
+            const setText = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
 
-            if (isVis) document.getElementById('tabGambar').className = activeTabClass + " bg-blue-500/20 text-blue-400 border border-blue-500/30";
-            if (isSeo) document.getElementById('tabDeskripsi').className = activeTabClass + " bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-            if (isGrid) document.getElementById('tabGrid').className = activeTabClass + " bg-indigo-500/20 text-indigo-400 border border-indigo-500/30";
+            // Mod Nav Kiri
+            setClass('navVisual', inactiveNavClass);
+            setClass('navSeo', inactiveNavClass);
+            setClass('navGrid', inactiveNavClass);
+            if (isVis) setClass('navVisual', activeNavClass + " text-blue-600");
+            if (isSeo) setClass('navSeo', activeNavClass + " text-emerald-600");
+            if (isGrid) setClass('navGrid', activeNavClass + " text-indigo-600");
 
-            document.getElementById('gambarContent').classList.add('hidden');
-            document.getElementById('gambarContent').classList.remove('flex');
-            document.getElementById('deskripsiContent').classList.add('hidden');
-            document.getElementById('deskripsiContent').classList.remove('flex');
-            document.getElementById('gridContent').classList.add('hidden');
-            document.getElementById('gridContent').classList.remove('flex');
-            document.getElementById('loadingState').classList.add('hidden');
-            document.getElementById('emptyState').classList.add('hidden');
-            document.getElementById('copyGambarBtn').classList.add('hidden');
-            document.getElementById('copyGambarBtn').classList.remove('flex');
-            
+            // Mod Display Menu
+            setStyle('menuVisual', 'display', isVis ? 'block' : 'none');
+            setStyle('menuSeo', 'display', isSeo ? 'block' : 'none');
+            setStyle('menuGrid', 'display', isGrid ? 'block' : 'none');
+
+            // Mod Tabs Kanan
+            setClass('tabGambar', inactiveTabClass);
+            setClass('tabDeskripsi', inactiveTabClass);
+            setClass('tabGrid', inactiveTabClass);
+            if (isVis) setClass('tabGambar', activeTabClass + " bg-blue-500/20 text-blue-400 border border-blue-500/30");
+            if (isSeo) setClass('tabDeskripsi', activeTabClass + " bg-emerald-500/20 text-emerald-400 border border-emerald-500/30");
+            if (isGrid) setClass('tabGrid', activeTabClass + " bg-indigo-500/20 text-indigo-400 border border-indigo-500/30");
+
+            // Hide everything first
+            addClass('gambarContent', 'hidden'); rmClass('gambarContent', 'flex');
+            addClass('deskripsiContent', 'hidden'); rmClass('deskripsiContent', 'flex');
+            addClass('gridContent', 'hidden'); rmClass('gridContent', 'flex');
+            addClass('loadingState', 'hidden'); rmClass('loadingState', 'flex');
+            addClass('emptyState', 'hidden'); rmClass('emptyState', 'flex');
+            addClass('copyGambarBtn', 'hidden'); rmClass('copyGambarBtn', 'flex');
+
             if (!isGrid || generatedPieces.length === 0) {
-                document.getElementById('resultsContainer').classList.add('hidden');
+                addClass('resultsContainer', 'hidden');
             }
 
+            // Show relevant panels
             if (isVis) {
                 if (state.generatedPromptGambar) {
-                    document.getElementById('promptOutput').value = state.generatedPromptGambar;
-                    document.getElementById('gambarContent').classList.remove('hidden');
-                    document.getElementById('gambarContent').classList.add('flex');
-                    document.getElementById('copyGambarBtn').classList.remove('hidden');
-                    document.getElementById('copyGambarBtn').classList.add('flex');
+                    const po = document.getElementById('promptOutput');
+                    if(po) po.value = state.generatedPromptGambar;
+                    rmClass('gambarContent', 'hidden'); addClass('gambarContent', 'flex');
+                    rmClass('copyGambarBtn', 'hidden'); addClass('copyGambarBtn', 'flex');
                 } else {
-                    document.getElementById('emptyTitle').textContent = "Belum Ada Prompt Visual";
-                    document.getElementById('emptyDesc').textContent = "Isi parameter di Menu Visual dan klik tombol Generate untuk meracik Prompt gambar Anda.";
-                    document.getElementById('emptyState').classList.remove('hidden');
+                    setText('emptyTitle', "Belum Ada Prompt Visual");
+                    setText('emptyDesc', "Isi parameter di Menu Visual dan klik tombol Generate untuk meracik Prompt gambar Anda.");
+                    rmClass('emptyState', 'hidden'); addClass('emptyState', 'flex');
                 }
             } else if (isSeo) {
                 if (state.generatedPromptSeo) {
-                    document.getElementById('deskripsiContent').classList.remove('hidden');
-                    document.getElementById('deskripsiContent').classList.add('flex');
+                    rmClass('deskripsiContent', 'hidden'); addClass('deskripsiContent', 'flex');
                 } else {
-                    document.getElementById('emptyTitle').textContent = "Belum Ada Prompt SEO";
-                    document.getElementById('emptyDesc').textContent = "Isi parameter di Menu SEO dan klik tombol Generate untuk meracik Prompt SEO Anda.";
-                    document.getElementById('emptyState').classList.remove('hidden');
+                    setText('emptyTitle', "Belum Ada Prompt SEO");
+                    setText('emptyDesc', "Isi parameter di Menu SEO dan klik tombol Generate untuk meracik Prompt SEO Anda.");
+                    rmClass('emptyState', 'hidden'); addClass('emptyState', 'flex');
                 }
             } else if (isGrid) {
                 if (generatedPieces.length > 0) {
-                    document.getElementById('gridContent').classList.remove('hidden');
-                    document.getElementById('gridContent').classList.add('flex');
-                    document.getElementById('resultsContainer').classList.remove('hidden'); 
+                    rmClass('gridContent', 'hidden'); addClass('gridContent', 'flex');
+                    rmClass('resultsContainer', 'hidden'); 
                 } else {
-                    document.getElementById('emptyTitle').textContent = "Belum Ada Potongan Grid";
-                    document.getElementById('emptyDesc').textContent = "Pilih gambar dari komputer/HP di Menu Grid lalu klik Potong untuk mendapatkan 4 panel.";
-                    document.getElementById('emptyState').classList.remove('hidden');
+                    setText('emptyTitle', "Belum Ada Potongan Grid");
+                    setText('emptyDesc', "Pilih gambar dari komputer/HP di Menu Grid lalu klik Potong untuk mendapatkan 4 panel.");
+                    rmClass('emptyState', 'hidden'); addClass('emptyState', 'flex');
                 }
             }
             saveToStorage();
         }
 
-        document.getElementById('navVisual').addEventListener('click', () => switchMode('visual'));
-        document.getElementById('navSeo').addEventListener('click', () => switchMode('seo'));
-        document.getElementById('navGrid').addEventListener('click', () => switchMode('grid'));
+        const navVis = document.getElementById('navVisual');
+        if(navVis) navVis.addEventListener('click', () => switchMode('visual'));
+        const navSeo = document.getElementById('navSeo');
+        if(navSeo) navSeo.addEventListener('click', () => switchMode('seo'));
+        const navGrid = document.getElementById('navGrid');
+        if(navGrid) navGrid.addEventListener('click', () => switchMode('grid'));
         
-        document.getElementById('tabGambar').addEventListener('click', () => switchMode('visual'));
-        document.getElementById('tabDeskripsi').addEventListener('click', () => switchMode('seo'));
-        document.getElementById('tabGrid').addEventListener('click', () => switchMode('grid'));
+        const tbGbr = document.getElementById('tabGambar');
+        if(tbGbr) tbGbr.addEventListener('click', () => switchMode('visual'));
+        const tbDesc = document.getElementById('tabDeskripsi');
+        if(tbDesc) tbDesc.addEventListener('click', () => switchMode('seo'));
+        const tbGrid = document.getElementById('tabGrid');
+        if(tbGrid) tbGrid.addEventListener('click', () => switchMode('grid'));
 
         /* ===================================================================
            SISTEM 1: GENERATE VISUAL 
            =================================================================== */
-        document.getElementById('generateVisualBtn').addEventListener('click', () => {
-            const productName = document.getElementById('productName').value;
-            const propsVal = document.getElementById('visualPropsInput').value || '-';
-            const isMulti = document.getElementById('multiAngle').checked;
+        const genVisBtn = document.getElementById('generateVisualBtn');
+        if(genVisBtn) {
+            genVisBtn.addEventListener('click', () => {
+                const pnEl = document.getElementById('productName');
+                const vpEl = document.getElementById('visualPropsInput');
+                const maEl = document.getElementById('multiAngle');
+                
+                const productName = pnEl ? pnEl.value : '';
+                const propsVal = (vpEl && vpEl.value) ? vpEl.value : '-';
+                const isMulti = maEl ? maEl.checked : false;
 
-            if (!productName.trim()) {
-                showError("Mohon isi Nama Utama Produk terlebih dahulu.");
-                return;
-            }
-            hideError();
-
-            let promptGbr = "";
-            let modelContext = "";
-
-            if (state.modelEnable && state.subjectMode === 'product') {
-                modelContext = `The product is being used/worn by a ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model. The product is prominently featured on the ${state.modelPlacement}. `;
-            }
-            
-            if (state.subjectMode === 'model') {
-                if (isMulti) {
-                    promptGbr = `Create a 4-panel grid photo collage of a person showcasing ${productName}. CRITICAL INSTRUCTION: Maintain 100% absolute character consistency. You MUST strictly PRESERVE the exact original facial structure, eye shape, nose, mouth, jawline, hair, and body shape perfectly from the source image. The face MUST remain absolutely identical to the original input. DO NOT morph, beautify, or alter the person's facial identity in any way.\n\n`;
-                    promptGbr += `1. Full Portrait: Standing in a ${state.background}, even soft lighting, looking natural.\n`;
-                    promptGbr += `2. Detail Shot: Close-up on the ${productName} worn by the person, shallow depth of field.\n`;
-                    promptGbr += `3. Lifestyle Context: Person interacting in a ${state.background}, accompanied by ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting.\n`;
-                    promptGbr += `4. Creative Angle: Dynamic ${state.angle}, dramatic lighting to provide a premium feel.\n\n`;
-                    promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
-                } else {
-                    promptGbr = `Photorealistic portrait of a person showcasing ${productName}. CRITICAL INSTRUCTION: Maintain 100% absolute character consistency. You MUST strictly PRESERVE the exact original facial structure, eye shape, nose, mouth, jawline, hair, and skin tone perfectly. The face MUST remain absolutely identical to the original input. DO NOT morph, beautify, or alter the person's facial identity in any way. Camera Angle: ${state.angle}. `;
-                    promptGbr += `Style: ${state.style}. Vibe: ${state.vibe}. Setting: Placed in a ${state.background}. Lighting: Illuminated by ${state.lighting}. Color Palette: ${state.color}. `;
-                    if (propsVal !== '-' && propsVal !== '') promptGbr += `Additional elements: Featuring ${propsVal}. `;
-                    promptGbr += `Highly detailed, 8k resolution, photorealistic masterpiece, realistic skin texture, raw photo.`;
+                if (!productName.trim()) {
+                    showError("Mohon isi Nama Utama Produk terlebih dahulu.");
+                    return;
                 }
-            } else {
-                if (isMulti) {
-                    promptGbr = `Create a 4-panel grid photo collage of ${productName} featuring 4 completely different compositions:\n\n`;
-                    promptGbr += `1. Main Catalog: Straight front view, clean solid background, even soft lighting with no harsh shadows, full focus on the entire product. ${state.modelEnable ? `Model is posing naturally.` : ''}\n`;
-                    promptGbr += `2. Macro Detail: Extreme close-up shot highlighting the texture and fine details, shallow depth of field with a beautiful bokeh background. ${state.modelEnable ? `Focusing closely on the ${state.modelPlacement} area of the model.` : ''}\n`;
-                    promptGbr += `3. Lifestyle Context: Product placed on a ${state.background}, accompanied by props like ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting. ${state.modelEnable ? `Model interacting with the product in a lifestyle setting.` : ''}\n`;
-                    promptGbr += `4. Creative Angle: Top-down flat lay or dynamic low angle, dramatic lighting with harsh shadows to provide a premium and elegant feel. ${state.modelEnable ? `Creative framing emphasizing the product on the model.` : ''}\n\n`;
-                    if (state.modelEnable) promptGbr += `Model details: ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model.\n`;
-                    promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
-                } else {
-                    promptGbr = `Professional product photography of ${productName}. Camera Angle: ${state.angle}. `;
-                    promptGbr += modelContext;
-                    promptGbr += `Style: ${state.style}. Vibe: ${state.vibe}. Setting: Placed on a ${state.background}. Lighting: Illuminated by ${state.lighting}. Color Palette: ${state.color}. `;
-                    if (propsVal !== '-' && propsVal !== '') promptGbr += `Additional elements: Featuring ${propsVal}. `;
-                    promptGbr += `Highly detailed, 8k resolution, photorealistic, commercial photography masterpiece, unreal engine 5 render style.`;
+                hideError();
+
+                let promptGbr = "";
+                let modelContext = "";
+
+                if (state.modelEnable && state.subjectMode === 'product') {
+                    modelContext = `The product is being used/worn by a ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model. The product is prominently featured on the ${state.modelPlacement}. `;
                 }
-            }
-            
-            state.generatedPromptGambar = promptGbr;
-            document.getElementById('promptOutput').value = promptGbr;
-            switchMode('visual');
-        });
+                
+                if (state.subjectMode === 'model') {
+                    if (isMulti) {
+                        promptGbr = `Create a 4-panel grid photo collage of a person showcasing ${productName}. CRITICAL INSTRUCTION: Maintain 100% absolute character consistency. You MUST strictly PRESERVE the exact original facial structure, eye shape, nose, mouth, jawline, hair, and body shape perfectly from the source image. The face MUST remain absolutely identical to the original input. DO NOT morph, beautify, or alter the person's facial identity in any way.\n\n`;
+                        promptGbr += `1. Full Portrait: Standing in a ${state.background}, even soft lighting, looking natural.\n`;
+                        promptGbr += `2. Detail Shot: Close-up on the ${productName} worn by the person, shallow depth of field.\n`;
+                        promptGbr += `3. Lifestyle Context: Person interacting in a ${state.background}, accompanied by ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting.\n`;
+                        promptGbr += `4. Creative Angle: Dynamic ${state.angle}, dramatic lighting to provide a premium feel.\n\n`;
+                        promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
+                    } else {
+                        promptGbr = `Photorealistic portrait of a person showcasing ${productName}. CRITICAL INSTRUCTION: Maintain 100% absolute character consistency. You MUST strictly PRESERVE the exact original facial structure, eye shape, nose, mouth, jawline, hair, and skin tone perfectly. The face MUST remain absolutely identical to the original input. DO NOT morph, beautify, or alter the person's facial identity in any way. Camera Angle: ${state.angle}. `;
+                        promptGbr += `Style: ${state.style}. Vibe: ${state.vibe}. Setting: Placed in a ${state.background}. Lighting: Illuminated by ${state.lighting}. Color Palette: ${state.color}. `;
+                        if (propsVal !== '-' && propsVal !== '') promptGbr += `Additional elements: Featuring ${propsVal}. `;
+                        promptGbr += `Highly detailed, 8k resolution, photorealistic masterpiece, realistic skin texture, raw photo.`;
+                    }
+                } else {
+                    if (isMulti) {
+                        promptGbr = `Create a 4-panel grid photo collage of ${productName} featuring 4 completely different compositions:\n\n`;
+                        promptGbr += `1. Main Catalog: Straight front view, clean solid background, even soft lighting with no harsh shadows, full focus on the entire product. ${state.modelEnable ? `Model is posing naturally.` : ''}\n`;
+                        promptGbr += `2. Macro Detail: Extreme close-up shot highlighting the texture and fine details, shallow depth of field with a beautiful bokeh background. ${state.modelEnable ? `Focusing closely on the ${state.modelPlacement} area of the model.` : ''}\n`;
+                        promptGbr += `3. Lifestyle Context: Product placed on a ${state.background}, accompanied by props like ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting. ${state.modelEnable ? `Model interacting with the product in a lifestyle setting.` : ''}\n`;
+                        promptGbr += `4. Creative Angle: Top-down flat lay or dynamic low angle, dramatic lighting with harsh shadows to provide a premium and elegant feel. ${state.modelEnable ? `Creative framing emphasizing the product on the model.` : ''}\n\n`;
+                        if (state.modelEnable) promptGbr += `Model details: ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model.\n`;
+                        promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
+                    } else {
+                        promptGbr = `Professional product photography of ${productName}. Camera Angle: ${state.angle}. `;
+                        promptGbr += modelContext;
+                        promptGbr += `Style: ${state.style}. Vibe: ${state.vibe}. Setting: Placed on a ${state.background}. Lighting: Illuminated by ${state.lighting}. Color Palette: ${state.color}. `;
+                        if (propsVal !== '-' && propsVal !== '') promptGbr += `Additional elements: Featuring ${propsVal}. `;
+                        promptGbr += `Highly detailed, 8k resolution, photorealistic, commercial photography masterpiece, unreal engine 5 render style.`;
+                    }
+                }
+                
+                state.generatedPromptGambar = promptGbr;
+                const po = document.getElementById('promptOutput');
+                if(po) po.value = promptGbr;
+                switchMode('visual');
+            });
+        }
 
         /* ===================================================================
            SISTEM 2: GENERATE PROMPT SEO (TEKS SAJA)
            =================================================================== */
-        document.getElementById('generateSeoBtn').addEventListener('click', () => {
-            const productName = document.getElementById('productName').value;
-            const brand = document.getElementById('brandInput').value || '-';
-            const type = document.getElementById('typeInput').value || '-';
-            const size = document.getElementById('sizeInput').value || '-';
-            const unit = document.getElementById('unitInput').value || '1 pcs';
-            const usp = document.getElementById('seoUspInput').value || '-';
+        const genSeoBtn = document.getElementById('generateSeoBtn');
+        if(genSeoBtn) {
+            genSeoBtn.addEventListener('click', () => {
+                const pnEl = document.getElementById('productName');
+                const brEl = document.getElementById('brandInput');
+                const tpEl = document.getElementById('typeInput');
+                const szEl = document.getElementById('sizeInput');
+                const unEl = document.getElementById('unitInput');
+                const uspEl = document.getElementById('seoUspInput');
 
-            if (!productName.trim() || state.keywords.length === 0) {
-                showError("Mohon isi Nama Produk dan pastikan minimal ada 1 Kata Kunci SEO.");
-                return;
-            }
-            hideError();
+                const productName = pnEl ? pnEl.value : '';
+                const brand = (brEl && brEl.value) ? brEl.value : '-';
+                const type = (tpEl && tpEl.value) ? tpEl.value : '-';
+                const size = (szEl && szEl.value) ? szEl.value : '-';
+                const unit = (unEl && unEl.value) ? unEl.value : '1 pcs';
+                const usp = (uspEl && uspEl.value) ? uspEl.value : '-';
 
-            const audienceData = AUDIENCES.find(a => a.id === state.audience);
-            const marketplaceData = MARKETPLACES.find(m => m.id === state.marketplace);
+                if (!productName.trim() || state.keywords.length === 0) {
+                    showError("Mohon isi Nama Produk dan pastikan minimal ada 1 Kata Kunci SEO.");
+                    return;
+                }
+                hideError();
 
-            const systemPrompt = `Anda adalah pakar SEO Marketplace Indonesia. Buat deskripsi produk yang SANGAT RAPI, PROFESIONAL, dan BERSIH (PLAIN TEXT).
+                const audienceData = AUDIENCES.find(a => a.id === state.audience);
+                const marketplaceData = MARKETPLACES.find(m => m.id === state.marketplace);
+
+                const systemPrompt = `Anda adalah pakar SEO Marketplace Indonesia. Buat deskripsi produk yang SANGAT RAPI, PROFESIONAL, dan BERSIH (PLAIN TEXT).
 TARGET MARKETPLACE: ${marketplaceData.label}
 GAYA BAHASA: ${audienceData.promptMod}
 
@@ -1126,10 +1182,11 @@ Nama: ${productName}
 Keywords: ${state.keywords.join(', ')}
 USP / Keunggulan Unik: ${usp}`;
 
-            state.generatedPromptSeo = systemPrompt;
-            renderDeskripsiResult();
-            switchMode('seo');
-        });
+                state.generatedPromptSeo = systemPrompt;
+                renderDeskripsiResult();
+                switchMode('seo');
+            });
+        }
 
         /* ===================================================================
            SISTEM 3: AUTO CUT GRID & LOGO (CANVAS LOKAL & PNG DOWNLOADER)
@@ -1144,49 +1201,49 @@ USP / Keunggulan Unik: ${usp}`;
         const downloadAllBtn = document.getElementById('downloadAllBtn');
         const downloadVideoBtn = document.getElementById('downloadVideoBtn');
 
-        // IG Info Variables
         const igEnableCheck = document.getElementById('igEnable');
         const igControls = document.getElementById('igControls');
         const igUsernameInput = document.getElementById('igUsername');
         const igColorSelect = document.getElementById('igColorSelect');
 
-        igEnableCheck.addEventListener('change', e => {
-            logos.ig.active = e.target.checked;
-            if(e.target.checked) igControls.classList.remove('hidden');
-            else igControls.classList.add('hidden');
-            drawPreviewCanvas();
-        });
+        if(igEnableCheck) {
+            igEnableCheck.addEventListener('change', e => {
+                logos.ig.active = e.target.checked;
+                if(igControls) {
+                    if(e.target.checked) igControls.classList.remove('hidden');
+                    else igControls.classList.add('hidden');
+                }
+                drawPreviewCanvas();
+            });
+        }
 
-        igUsernameInput.addEventListener('input', e => {
-            logos.ig.text = e.target.value || 'globalmart.id';
-            drawPreviewCanvas();
-        });
+        if(igUsernameInput) igUsernameInput.addEventListener('input', e => { logos.ig.text = e.target.value || 'globalmart.id'; drawPreviewCanvas(); });
+        if(igColorSelect) igColorSelect.addEventListener('change', e => { logos.ig.color = e.target.value; drawPreviewCanvas(); });
 
-        igColorSelect.addEventListener('change', e => {
-            logos.ig.color = e.target.value;
-            drawPreviewCanvas();
-        });
-
-        // Setup Event Listener Logo Uploads
         const cLogoUpl = document.getElementById('logoCompanyUpload');
         const bLogoUpl = document.getElementById('logoBrandUpload');
-        
         const cSlider = document.getElementById('sizeLogoCompany');
         const bSlider = document.getElementById('sizeLogoBrand');
 
-        cLogoUpl.addEventListener('change', e => handleLogoUpload(e, 'company'));
-        bLogoUpl.addEventListener('change', e => handleLogoUpload(e, 'brand'));
+        if(cLogoUpl) cLogoUpl.addEventListener('change', e => handleLogoUpload(e, 'company'));
+        if(bLogoUpl) bLogoUpl.addEventListener('change', e => handleLogoUpload(e, 'brand'));
         
-        cSlider.addEventListener('input', e => {
-            logos.company.size = parseInt(e.target.value);
-            document.getElementById('valLogo1').textContent = e.target.value + 'px';
-            drawPreviewCanvas();
-        });
-        bSlider.addEventListener('input', e => {
-            logos.brand.size = parseInt(e.target.value);
-            document.getElementById('valLogo2').textContent = e.target.value + 'px';
-            drawPreviewCanvas();
-        });
+        if(cSlider) {
+            cSlider.addEventListener('input', e => {
+                logos.company.size = parseInt(e.target.value);
+                const vl1 = document.getElementById('valLogo1');
+                if(vl1) vl1.textContent = e.target.value + 'px';
+                drawPreviewCanvas();
+            });
+        }
+        if(bSlider) {
+            bSlider.addEventListener('input', e => {
+                logos.brand.size = parseInt(e.target.value);
+                const vl2 = document.getElementById('valLogo2');
+                if(vl2) vl2.textContent = e.target.value + 'px';
+                drawPreviewCanvas();
+            });
+        }
 
         function handleLogoUpload(e, type) {
             const file = e.target.files[0];
@@ -1199,12 +1256,15 @@ USP / Keunggulan Unik: ${usp}`;
                     logos[type].img = img;
                     logos[type].active = true;
                     
-                    document.getElementById('logoSliders').classList.remove('hidden');
-                    if(type === 'company') document.getElementById('sliderCompanyContainer').classList.remove('hidden');
-                    if(type === 'brand') document.getElementById('sliderBrandContainer').classList.remove('hidden');
-                    document.getElementById('interactivePreviewContainer').classList.remove('hidden');
-                    document.getElementById('interactivePreviewContainer').classList.add('flex');
-                    
+                    const lgSlid = document.getElementById('logoSliders');
+                    if(lgSlid) lgSlid.classList.remove('hidden');
+                    if(type === 'company') document.getElementById('sliderCompanyContainer')?.classList.remove('hidden');
+                    if(type === 'brand') document.getElementById('sliderBrandContainer')?.classList.remove('hidden');
+                    const intPrev = document.getElementById('interactivePreviewContainer');
+                    if(intPrev) {
+                        intPrev.classList.remove('hidden');
+                        intPrev.classList.add('flex');
+                    }
                     drawPreviewCanvas();
                 }
                 img.src = event.target.result;
@@ -1212,7 +1272,6 @@ USP / Keunggulan Unik: ${usp}`;
             reader.readAsDataURL(file);
         }
 
-        // Logic Fetch Logo from Database (Select Option)
         function handleDBSelect(e, type) {
             const driveUrl = e.target.value;
             if(!driveUrl) {
@@ -1226,9 +1285,7 @@ USP / Keunggulan Unik: ${usp}`;
             if(match) fileId = match[0];
             else fileId = driveUrl;
 
-            // Proxy to bypass CORS error on Drive Images
             const proxyUrl = `https://wsrv.nl/?url=` + encodeURIComponent(`https://drive.google.com/uc?export=view&id=${fileId}`);
-
             const originalText = e.target.options[e.target.selectedIndex].text;
             e.target.options[e.target.selectedIndex].text = "Memuat...";
 
@@ -1238,12 +1295,16 @@ USP / Keunggulan Unik: ${usp}`;
                 logos[type].img = img;
                 logos[type].active = true;
                 
-                document.getElementById('logoSliders').classList.remove('hidden');
-                if(type === 'company') document.getElementById('sliderCompanyContainer').classList.remove('hidden');
-                if(type === 'brand') document.getElementById('sliderBrandContainer').classList.remove('hidden');
+                const lgSlid = document.getElementById('logoSliders');
+                if(lgSlid) lgSlid.classList.remove('hidden');
+                if(type === 'company') document.getElementById('sliderCompanyContainer')?.classList.remove('hidden');
+                if(type === 'brand') document.getElementById('sliderBrandContainer')?.classList.remove('hidden');
 
-                document.getElementById('interactivePreviewContainer').classList.remove('hidden');
-                document.getElementById('interactivePreviewContainer').classList.add('flex');
+                const intPrev = document.getElementById('interactivePreviewContainer');
+                if(intPrev) {
+                    intPrev.classList.remove('hidden');
+                    intPrev.classList.add('flex');
+                }
                 
                 e.target.options[e.target.selectedIndex].text = originalText;
                 drawPreviewCanvas();
@@ -1255,10 +1316,9 @@ USP / Keunggulan Unik: ${usp}`;
             img.src = proxyUrl;
         }
 
-        dbCompanySelect.addEventListener('change', e => handleDBSelect(e, 'company'));
-        dbBrandSelect.addEventListener('change', e => handleDBSelect(e, 'brand'));
+        if(dbCompanySelect) dbCompanySelect.addEventListener('change', e => handleDBSelect(e, 'company'));
+        if(dbBrandSelect) dbBrandSelect.addEventListener('change', e => handleDBSelect(e, 'brand'));
 
-        // Logic Interactive Canvas
         const prevCanvas = document.getElementById('previewCanvas');
         let isDragging = false;
         
@@ -1286,19 +1346,16 @@ USP / Keunggulan Unik: ${usp}`;
             prevCanvas.height = 1920;
             const ctx = prevCanvas.getContext('2d');
             
-            // Draw BG Panel 1
             ctx.drawImage(cachedPanel1, 0, 0, 1080, 1920);
 
-            // Draw Center Guidelines (Crosshair)
             ctx.save();
-            ctx.strokeStyle = 'rgba(99, 102, 241, 0.7)'; // Indigo-500 dengan transparansi
+            ctx.strokeStyle = 'rgba(99, 102, 241, 0.7)'; 
             ctx.lineWidth = 4;
             ctx.setLineDash([15, 15]);
             ctx.beginPath(); ctx.moveTo(1080 / 2, 0); ctx.lineTo(1080 / 2, 1920); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(0, 1920 / 2); ctx.lineTo(1080, 1920 / 2); ctx.stroke();
             ctx.restore();
 
-            // Draw Logos
             ['company', 'brand', 'ig'].forEach(type => {
                 if(logos[type].active) {
                     const l = logos[type];
@@ -1325,13 +1382,11 @@ USP / Keunggulan Unik: ${usp}`;
                         ctx.drawImage(l.img, l.x, l.y, l.size, drawH);
                     }
                     
-                    // Draw selection border and coordinates if hovering/dragging
                     if(draggingLogo === type) {
                         ctx.strokeStyle = '#6366f1';
                         ctx.lineWidth = 5;
                         ctx.strokeRect(l.x - 2, l.y - 2, totalW + 4, drawH + 4);
                         
-                        // Tooltip Coordinates
                         ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
                         if (ctx.roundRect) {
                             ctx.roundRect(l.x, l.y - 45, 150, 35, 8);
@@ -1348,18 +1403,16 @@ USP / Keunggulan Unik: ${usp}`;
                 }
             });
 
-            // Draw Ruler Edges
             ctx.save();
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)'; // Dark Slate Overlay
-            ctx.fillRect(0, 0, 1080, 50); // Top Ruler
-            ctx.fillRect(0, 0, 50, 1920); // Left Ruler
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)'; 
+            ctx.fillRect(0, 0, 1080, 50); 
+            ctx.fillRect(0, 0, 50, 1920); 
             
             ctx.fillStyle = '#cbd5e1'; 
             ctx.font = '16px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             
-            // Top Ruler Marks
             for(let i = 0; i <= 1080; i += 50) {
                 if (i % 100 === 0) {
                     ctx.fillText(i, i, 20);
@@ -1369,7 +1422,6 @@ USP / Keunggulan Unik: ${usp}`;
                 }
             }
             
-            // Left Ruler Marks
             for(let i = 0; i <= 1920; i += 50) {
                 if (i % 100 === 0) {
                     ctx.save();
@@ -1386,8 +1438,8 @@ USP / Keunggulan Unik: ${usp}`;
         }
 
         const startDrag = (e) => {
+            if(!prevCanvas) return;
             const pos = getMousePos(prevCanvas, e);
-            // Cek tumbukan dari atas ke bawah
             ['company', 'brand', 'ig'].forEach(type => {
                 if(logos[type].active) {
                     const l = logos[type];
@@ -1395,8 +1447,8 @@ USP / Keunggulan Unik: ${usp}`;
                     let totalW = l.size;
 
                     if (type === 'ig') {
-                        const tWidth = 1080; // Rough approx untuk kemudahan hit area
-                        totalW = l.size + 15 + 300; // max area name
+                        const tWidth = 1080; 
+                        totalW = l.size + 15 + 300; 
                     } else if (l.img) {
                         const aspect = l.img.width / l.img.height;
                         drawH = l.size / aspect;
@@ -1413,8 +1465,8 @@ USP / Keunggulan Unik: ${usp}`;
         };
 
         const moveDrag = (e) => {
-            if(!draggingLogo) return;
-            e.preventDefault(); // cegah scroll layar HP
+            if(!draggingLogo || !prevCanvas) return;
+            e.preventDefault(); 
             const pos = getMousePos(prevCanvas, e);
             logos[draggingLogo].x = pos.x - logos[draggingLogo].dragOffsetX;
             logos[draggingLogo].y = pos.y - logos[draggingLogo].dragOffsetY;
@@ -1426,48 +1478,54 @@ USP / Keunggulan Unik: ${usp}`;
             drawPreviewCanvas();
         };
 
-        prevCanvas.addEventListener('mousedown', startDrag);
-        prevCanvas.addEventListener('mousemove', moveDrag);
-        prevCanvas.addEventListener('mouseup', stopDrag);
-        prevCanvas.addEventListener('mouseleave', stopDrag);
+        if(prevCanvas) {
+            prevCanvas.addEventListener('mousedown', startDrag);
+            prevCanvas.addEventListener('mousemove', moveDrag);
+            prevCanvas.addEventListener('mouseup', stopDrag);
+            prevCanvas.addEventListener('mouseleave', stopDrag);
+            prevCanvas.addEventListener('touchstart', startDrag, {passive: false});
+            prevCanvas.addEventListener('touchmove', moveDrag, {passive: false});
+            prevCanvas.addEventListener('touchend', stopDrag);
+        }
 
-        prevCanvas.addEventListener('touchstart', startDrag, {passive: false});
-        prevCanvas.addEventListener('touchmove', moveDrag, {passive: false});
-        prevCanvas.addEventListener('touchend', stopDrag);
+        if(imageUpload) {
+            imageUpload.addEventListener('change', function(e) {
+                hideError();
+                const file = e.target.files[0];
+                if (!file) return;
 
+                originalFileName = file.name.split('.').slice(0, -1).join('.') || "image";
 
-        imageUpload.addEventListener('change', function(e) {
-            hideError();
-            const file = e.target.files[0];
-            if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    loadedImage.onload = function() {
+                        if(originalImage) originalImage.src = loadedImage.src;
+                        if(imageDimensions) imageDimensions.textContent = `${loadedImage.width} x ${loadedImage.height} px`;
+                        if(originalPreviewContainer) {
+                            originalPreviewContainer.classList.remove('hidden');
+                            originalPreviewContainer.classList.add('flex');
+                        }
+                        if(resultsContainer) resultsContainer.classList.add('hidden'); 
+                        generatedPieces = []; 
+                        
+                        if(cutButton) {
+                            cutButton.classList.remove('hidden');
+                            cutButton.classList.add('flex');
+                        }
 
-            originalFileName = file.name.split('.').slice(0, -1).join('.') || "image";
+                        if(state.gridAspectRatio === '9:16') {
+                            const lgSec = document.getElementById('logoUploadSection');
+                            if(lgSec) lgSec.classList.remove('hidden');
+                            generatePreviewPanel1();
+                        }
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                loadedImage.onload = function() {
-                    originalImage.src = loadedImage.src;
-                    imageDimensions.textContent = `${loadedImage.width} x ${loadedImage.height} px`;
-                    originalPreviewContainer.classList.remove('hidden');
-                    originalPreviewContainer.classList.add('flex');
-                    resultsContainer.classList.add('hidden'); 
-                    generatedPieces = []; 
-                    
-                    document.getElementById('cutButton').classList.remove('hidden');
-                    document.getElementById('cutButton').classList.add('flex');
-
-                    // Set status logo if 9:16
-                    if(state.gridAspectRatio === '9:16') {
-                        document.getElementById('logoUploadSection').classList.remove('hidden');
-                        generatePreviewPanel1();
+                        switchMode('grid');
                     }
-
-                    switchMode('grid');
+                    loadedImage.src = event.target.result;
                 }
-                loadedImage.src = event.target.result;
-            }
-            reader.readAsDataURL(file);
-        });
+                reader.readAsDataURL(file);
+            });
+        }
 
         function generatePreviewPanel1() {
             if(!loadedImage.src) return;
@@ -1502,307 +1560,285 @@ USP / Keunggulan Unik: ${usp}`;
             cachedPanel1.src = canvas.toDataURL('image/png');
         }
 
-        cutButton.addEventListener('click', function() {
-            if (!loadedImage.src) return;
+        if(cutButton) {
+            cutButton.addEventListener('click', function() {
+                if (!loadedImage.src) return;
 
-            piecesGrid.innerHTML = ''; 
-            generatedPieces = []; 
+                if(piecesGrid) piecesGrid.innerHTML = ''; 
+                generatedPieces = []; 
 
-            const width = loadedImage.width;
-            const height = loadedImage.height;
-            const pieceWidth = Math.floor(width / 2);
-            const pieceHeight = Math.floor(height / 2);
-            
-            const targetWidth = 1080;
-            const targetHeight = state.gridAspectRatio === '9:16' ? 1920 : (state.gridAspectRatio === '3:4' ? 1440 : 1080);
-            
-            let pieceCount = 1;
-
-            for (let y = 0; y < 2; y++) {
-                for (let x = 0; x < 2; x++) {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = targetWidth;
-                    canvas.height = targetHeight;
-                    const ctx = canvas.getContext('2d');
-
-                    const pieceX = x * pieceWidth;
-                    const pieceY = y * pieceHeight;
-                    
-                    const sourceRatio = pieceWidth / pieceHeight;
-                    const targetRatio = targetWidth / targetHeight;
-
-                    let sx = pieceX, sy = pieceY, sWidth = pieceWidth, sHeight = pieceHeight;
-
-                    if (sourceRatio > targetRatio) {
-                        sWidth = pieceHeight * targetRatio;
-                        sx = pieceX + (pieceWidth - sWidth) / 2;
-                    } else {
-                        sHeight = pieceWidth / targetRatio;
-                        sy = pieceY + (pieceHeight - sHeight) / 2;
-                    }
-
-                    // 1. Gambar Base Panel
-                    ctx.drawImage(loadedImage, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
-
-                    // 2. Tumpuk Logo jika rasio 9:16 dan diaktifkan
-                    if(state.gridAspectRatio === '9:16') {
-                        ['company', 'brand', 'ig'].forEach(type => {
-                            if(logos[type].active) {
-                                const l = logos[type];
-                                if (type === 'ig') {
-                                    const icon = igIcons[l.color];
-                                    if(icon.complete) ctx.drawImage(icon, l.x, l.y, l.size, l.size);
-                                    
-                                    ctx.font = `bold ${l.size * 0.75}px Arial`;
-                                    ctx.fillStyle = l.color;
-                                    ctx.textAlign = 'left';
-                                    ctx.textBaseline = 'middle';
-                                    ctx.fillText(l.text, l.x + l.size + 15, l.y + (l.size / 2));
-                                } else if(l.img) {
-                                    const aspect = l.img.width / l.img.height;
-                                    const drawH = l.size / aspect;
-                                    ctx.drawImage(l.img, l.x, l.y, l.size, drawH);
-                                }
-                            }
-                        });
-                    }
-
-                    const dataUrl = canvas.toDataURL('image/png');
-                    const fileName = `${pieceCount}.png`;
-                    
-                    generatedPieces.push({ url: dataUrl, name: fileName });
-                    createPieceUI(dataUrl, pieceCount, x, y, fileName, targetHeight);
-                    pieceCount++;
-                }
-            }
-
-            document.getElementById('gridResultLabel').textContent = `Siap diunggah (1080x${targetHeight} px) - Teroptimasi`;
-            document.getElementById('resultsContainer').classList.remove('hidden');
-            switchMode('grid'); 
-        });
-
-        // ------------------ Logika Unduh Semua Sebagai PNG (Berurutan) ------------------
-        downloadAllBtn.addEventListener('click', async function() {
-            if (generatedPieces.length === 0) return;
-
-            const originalContent = downloadAllBtn.innerHTML;
-            downloadAllBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> <span>Mengunduh...</span>';
-            lucide.createIcons({root: downloadAllBtn});
-            downloadAllBtn.disabled = true;
-            downloadAllBtn.classList.add('opacity-75', 'cursor-not-allowed');
-
-            try {
-                for (let i = 0; i < generatedPieces.length; i++) {
-                    const piece = generatedPieces[i];
-                    const link = document.createElement('a');
-                    link.href = piece.url;
-                    link.download = `Grid_Panel_${i+1}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    // Tunggu sedikit agar browser tidak menolak unduhan beruntun
-                    await new Promise(r => setTimeout(r, 300));
-                }
-            } catch (error) {
-                console.error("Gagal mengunduh gambar:", error);
-                showError("Terjadi kesalahan saat mengunduh gambar.");
-            } finally {
-                downloadAllBtn.innerHTML = originalContent;
-                lucide.createIcons({root: downloadAllBtn});
-                downloadAllBtn.disabled = false;
-                downloadAllBtn.classList.remove('opacity-75', 'cursor-not-allowed');
-            }
-        });
-
-        // ------------------ Logika Pembuatan Video MP4 Slideshow ------------------
-        downloadVideoBtn.addEventListener('click', async function() {
-            if (generatedPieces.length === 0) return;
-
-            // Set UI to loading mode
-            const originalContent = downloadVideoBtn.innerHTML;
-            downloadVideoBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> <span>Merekam (±11.2 dtk)...</span>';
-            lucide.createIcons({root: downloadVideoBtn});
-            downloadVideoBtn.disabled = true;
-            downloadVideoBtn.classList.add('opacity-75', 'cursor-not-allowed');
-
-            document.getElementById('emptyState').classList.add('hidden');
-            document.getElementById('gridContent').classList.add('hidden');
-            document.getElementById('loadingState').classList.remove('hidden');
-            document.getElementById('loadingState').classList.add('flex');
-            document.getElementById('loadingText').innerHTML = 'Merekam Slideshow Video (11.2 detik)...<br/>Mohon <span class="text-white bg-red-500 px-1 rounded">TETAP DI HALAMAN INI</span> hingga selesai agar durasi tidak terpotong.';
-
-            try {
-                // 1. Setup Canvas for Video Rendering
+                const width = loadedImage.width;
+                const height = loadedImage.height;
+                const pieceWidth = Math.floor(width / 2);
+                const pieceHeight = Math.floor(height / 2);
+                
                 const targetWidth = 1080;
                 const targetHeight = state.gridAspectRatio === '9:16' ? 1920 : (state.gridAspectRatio === '3:4' ? 1440 : 1080);
                 
-                const canvas = document.createElement('canvas');
-                canvas.width = targetWidth;
-                canvas.height = targetHeight;
-                const ctx = canvas.getContext('2d', { alpha: false });
+                let pieceCount = 1;
 
-                // 2. Load all 4 pieces as Image objects
-                const images = await Promise.all(generatedPieces.map(piece => {
-                    return new Promise((resolve, reject) => {
-                        const img = new Image();
-                        img.crossOrigin = "anonymous";
-                        img.onload = () => resolve(img);
-                        img.onerror = reject;
-                        img.src = piece.url;
-                    });
-                }));
+                for (let y = 0; y < 2; y++) {
+                    for (let x = 0; x < 2; x++) {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = targetWidth;
+                        canvas.height = targetHeight;
+                        const ctx = canvas.getContext('2d');
 
-                // 3. Setup MediaRecorder
-                const stream = canvas.captureStream(30); // 30 FPS
-                
-                // Coba gunakan MP4, jika browser tidak dukung, fallback ke WebM
-                let mimeType = 'video/mp4';
-                let ext = 'mp4';
-                if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    mimeType = 'video/webm;codecs=vp8'; 
-                    ext = 'webm';
+                        const pieceX = x * pieceWidth;
+                        const pieceY = y * pieceHeight;
+                        
+                        const sourceRatio = pieceWidth / pieceHeight;
+                        const targetRatio = targetWidth / targetHeight;
+
+                        let sx = pieceX, sy = pieceY, sWidth = pieceWidth, sHeight = pieceHeight;
+
+                        if (sourceRatio > targetRatio) {
+                            sWidth = pieceHeight * targetRatio;
+                            sx = pieceX + (pieceWidth - sWidth) / 2;
+                        } else {
+                            sHeight = pieceWidth / targetRatio;
+                            sy = pieceY + (pieceHeight - sHeight) / 2;
+                        }
+
+                        ctx.drawImage(loadedImage, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
+
+                        if(state.gridAspectRatio === '9:16') {
+                            ['company', 'brand', 'ig'].forEach(type => {
+                                if(logos[type].active) {
+                                    const l = logos[type];
+                                    if (type === 'ig') {
+                                        const icon = igIcons[l.color];
+                                        if(icon.complete) ctx.drawImage(icon, l.x, l.y, l.size, l.size);
+                                        
+                                        ctx.font = `bold ${l.size * 0.75}px Arial`;
+                                        ctx.fillStyle = l.color;
+                                        ctx.textAlign = 'left';
+                                        ctx.textBaseline = 'middle';
+                                        ctx.fillText(l.text, l.x + l.size + 15, l.y + (l.size / 2));
+                                    } else if(l.img) {
+                                        const aspect = l.img.width / l.img.height;
+                                        const drawH = l.size / aspect;
+                                        ctx.drawImage(l.img, l.x, l.y, l.size, drawH);
+                                    }
+                                }
+                            });
+                        }
+
+                        const dataUrl = canvas.toDataURL('image/png');
+                        const fileName = `${pieceCount}.png`;
+                        
+                        generatedPieces.push({ url: dataUrl, name: fileName });
+                        createPieceUI(dataUrl, pieceCount, x, y, fileName, targetHeight);
+                        pieceCount++;
+                    }
                 }
 
-                // Bitrate 10 Mbps -> max ~14 MB for 11.2 seconds (well below 28 MB limit)
-                const recorder = new MediaRecorder(stream, { 
-                    mimeType: mimeType,
-                    videoBitsPerSecond: 10000000 
-                });
+                const gridResLab = document.getElementById('gridResultLabel');
+                if(gridResLab) gridResLab.textContent = `Siap diunggah (1080x${targetHeight} px) - Teroptimasi`;
+                if(resultsContainer) resultsContainer.classList.remove('hidden');
+                switchMode('grid'); 
+            });
+        }
 
-                const chunks = [];
-                recorder.ondataavailable = e => {
-                    if (e.data.size > 0) chunks.push(e.data);
-                };
+        if(downloadAllBtn) {
+            downloadAllBtn.addEventListener('click', async function() {
+                if (generatedPieces.length === 0) return;
 
-                const recordingPromise = new Promise((resolve, reject) => {
-                    recorder.onstop = () => {
-                        const blob = new Blob(chunks, { type: mimeType });
-                        resolve(blob);
-                    };
-                    recorder.onerror = (e) => reject(e);
-                });
+                const originalContent = downloadAllBtn.innerHTML;
+                downloadAllBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> <span>Mengunduh...</span>';
+                if(lucide) lucide.createIcons({root: downloadAllBtn});
+                downloadAllBtn.disabled = true;
+                downloadAllBtn.classList.add('opacity-75', 'cursor-not-allowed');
 
-                recorder.start(100); // Kumpulkan chunk setiap 100ms agar durasi akurat dan tidak terpotong
+                try {
+                    for (let i = 0; i < generatedPieces.length; i++) {
+                        const piece = generatedPieces[i];
+                        const link = document.createElement('a');
+                        link.href = piece.url;
+                        link.download = `Grid_Panel_${i+1}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        await new Promise(r => setTimeout(r, 300));
+                    }
+                } catch (error) {
+                    console.error("Gagal mengunduh gambar:", error);
+                    showError("Terjadi kesalahan saat mengunduh gambar.");
+                } finally {
+                    downloadAllBtn.innerHTML = originalContent;
+                    if(lucide) lucide.createIcons({root: downloadAllBtn});
+                    downloadAllBtn.disabled = false;
+                    downloadAllBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                }
+            });
+        }
 
-                // 4. Animation Config
-                const slideDuration = 2800; // 2.8 detik per slide
-                const transitionDuration = 500; // 0.5 detik transisi
-                const totalDuration = images.length * slideDuration; // 11200 ms (11.2 detik)
-                
-                const transitions = images.map(() => Math.floor(Math.random() * 4)); 
-                let startTime = null;
+        if(downloadVideoBtn) {
+            downloadVideoBtn.addEventListener('click', async function() {
+                if (generatedPieces.length === 0) return;
 
-                // 5. Render Loop
-                function drawFrame(timestamp) {
-                    if (!startTime) startTime = timestamp;
-                    const elapsed = timestamp - startTime;
+                const originalContent = downloadVideoBtn.innerHTML;
+                downloadVideoBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> <span>Merekam (±11.2 dtk)...</span>';
+                if(lucide) lucide.createIcons({root: downloadVideoBtn});
+                downloadVideoBtn.disabled = true;
+                downloadVideoBtn.classList.add('opacity-75', 'cursor-not-allowed');
 
-                    // Stop condition + buffer 200ms agar frame terakhir terekam sempurna sebelum stop
-                    if (elapsed >= totalDuration + 200) {
-                        recorder.stop();
-                        return;
+                const empSt = document.getElementById('emptyState');
+                const grCont = document.getElementById('gridContent');
+                const ldSt = document.getElementById('loadingState');
+                const ldTx = document.getElementById('loadingText');
+
+                if(empSt) empSt.classList.add('hidden');
+                if(grCont) grCont.classList.add('hidden');
+                if(ldSt) { ldSt.classList.remove('hidden'); ldSt.classList.add('flex'); }
+                if(ldTx) ldTx.innerHTML = 'Merekam Slideshow Video (11.2 detik)...<br/>Mohon <span class="text-white bg-red-500 px-1 rounded">TETAP DI HALAMAN INI</span> hingga selesai agar durasi tidak terpotong.';
+
+                try {
+                    const targetWidth = 1080;
+                    const targetHeight = state.gridAspectRatio === '9:16' ? 1920 : (state.gridAspectRatio === '3:4' ? 1440 : 1080);
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+                    const ctx = canvas.getContext('2d', { alpha: false });
+
+                    const images = await Promise.all(generatedPieces.map(piece => {
+                        return new Promise((resolve, reject) => {
+                            const img = new Image();
+                            img.crossOrigin = "anonymous";
+                            img.onload = () => resolve(img);
+                            img.onerror = reject;
+                            img.src = piece.url;
+                        });
+                    }));
+
+                    const stream = canvas.captureStream(30); 
+                    
+                    let mimeType = 'video/mp4';
+                    let ext = 'mp4';
+                    if (!MediaRecorder.isTypeSupported(mimeType)) {
+                        mimeType = 'video/webm;codecs=vp8'; 
+                        ext = 'webm';
                     }
 
-                    // Paksa waktu visual berhenti di ujung (11199ms) agar index aman
-                    const visualElapsed = Math.min(elapsed, totalDuration - 1);
+                    const recorder = new MediaRecorder(stream, { 
+                        mimeType: mimeType,
+                        videoBitsPerSecond: 10000000 
+                    });
 
-                    // Clear background
-                    ctx.fillStyle = '#000000';
-                    ctx.fillRect(0, 0, targetWidth, targetHeight);
+                    const chunks = [];
+                    recorder.ondataavailable = e => {
+                        if (e.data.size > 0) chunks.push(e.data);
+                    };
 
-                    const currentSlideIndex = Math.min(Math.floor(visualElapsed / slideDuration), images.length - 1);
-                    const slideElapsed = visualElapsed % slideDuration;
-                    const isTransitioning = slideElapsed > (slideDuration - transitionDuration);
+                    const recordingPromise = new Promise((resolve, reject) => {
+                        recorder.onstop = () => {
+                            const blob = new Blob(chunks, { type: mimeType });
+                            resolve(blob);
+                        };
+                        recorder.onerror = (e) => reject(e);
+                    });
 
-                    const imgCurrent = images[currentSlideIndex];
-                    const imgNext = images[(currentSlideIndex + 1) % images.length];
+                    recorder.start(100); 
 
-                    if (!isTransitioning || currentSlideIndex === images.length - 1) { 
-                        // Tampilan Statis (tanpa transisi di frame terakhir)
-                        ctx.globalAlpha = 1;
-                        ctx.drawImage(imgCurrent, 0, 0, targetWidth, targetHeight);
-                    } else {
-                        // Tampilan Transisi
-                        const progress = (slideElapsed - (slideDuration - transitionDuration)) / transitionDuration;
-                        // Easing in-out
-                        const easeProgress = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2; 
-                        
-                        const tType = transitions[currentSlideIndex];
+                    const slideDuration = 2800; 
+                    const transitionDuration = 500; 
+                    const totalDuration = images.length * slideDuration; 
+                    
+                    const transitions = images.map(() => Math.floor(Math.random() * 4)); 
+                    let startTime = null;
 
-                        if (tType === 0) { 
-                            // Fade
+                    function drawFrame(timestamp) {
+                        if (!startTime) startTime = timestamp;
+                        const elapsed = timestamp - startTime;
+
+                        if (elapsed >= totalDuration + 200) {
+                            recorder.stop();
+                            return;
+                        }
+
+                        const visualElapsed = Math.min(elapsed, totalDuration - 1);
+
+                        ctx.fillStyle = '#000000';
+                        ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+                        const currentSlideIndex = Math.min(Math.floor(visualElapsed / slideDuration), images.length - 1);
+                        const slideElapsed = visualElapsed % slideDuration;
+                        const isTransitioning = slideElapsed > (slideDuration - transitionDuration);
+
+                        const imgCurrent = images[currentSlideIndex];
+                        const imgNext = images[(currentSlideIndex + 1) % images.length];
+
+                        if (!isTransitioning || currentSlideIndex === images.length - 1) { 
                             ctx.globalAlpha = 1;
                             ctx.drawImage(imgCurrent, 0, 0, targetWidth, targetHeight);
-                            ctx.globalAlpha = easeProgress;
-                            ctx.drawImage(imgNext, 0, 0, targetWidth, targetHeight);
-                            ctx.globalAlpha = 1;
-                        } else if (tType === 1) { 
-                            // Slide Kiri
-                            ctx.globalAlpha = 1;
-                            const offset = easeProgress * targetWidth;
-                            ctx.drawImage(imgCurrent, -offset, 0, targetWidth, targetHeight);
-                            ctx.drawImage(imgNext, targetWidth - offset, 0, targetWidth, targetHeight);
-                        } else if (tType === 2) { 
-                            // Slide Atas
-                            ctx.globalAlpha = 1;
-                            const offset = easeProgress * targetHeight;
-                            ctx.drawImage(imgCurrent, 0, -offset, targetWidth, targetHeight);
-                            ctx.drawImage(imgNext, 0, targetHeight - offset, targetWidth, targetHeight);
-                        } else if (tType === 3) { 
-                            // Zoom Crossfade
-                            ctx.globalAlpha = 1 - easeProgress;
-                            const scale1 = 1 + (easeProgress * 0.2); // Zoom out slowly
-                            ctx.drawImage(imgCurrent, -targetWidth*(scale1-1)/2, -targetHeight*(scale1-1)/2, targetWidth*scale1, targetHeight*scale1);
+                        } else {
+                            const progress = (slideElapsed - (slideDuration - transitionDuration)) / transitionDuration;
+                            const easeProgress = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2; 
                             
-                            ctx.globalAlpha = easeProgress;
-                            const scale2 = 1.2 - (easeProgress * 0.2); // Zoom in slowly
-                            ctx.drawImage(imgNext, -targetWidth*(scale2-1)/2, -targetHeight*(scale2-1)/2, targetWidth*scale2, targetHeight*scale2);
-                            ctx.globalAlpha = 1;
+                            const tType = transitions[currentSlideIndex];
+
+                            if (tType === 0) { 
+                                ctx.globalAlpha = 1;
+                                ctx.drawImage(imgCurrent, 0, 0, targetWidth, targetHeight);
+                                ctx.globalAlpha = easeProgress;
+                                ctx.drawImage(imgNext, 0, 0, targetWidth, targetHeight);
+                                ctx.globalAlpha = 1;
+                            } else if (tType === 1) { 
+                                ctx.globalAlpha = 1;
+                                const offset = easeProgress * targetWidth;
+                                ctx.drawImage(imgCurrent, -offset, 0, targetWidth, targetHeight);
+                                ctx.drawImage(imgNext, targetWidth - offset, 0, targetWidth, targetHeight);
+                            } else if (tType === 2) { 
+                                ctx.globalAlpha = 1;
+                                const offset = easeProgress * targetHeight;
+                                ctx.drawImage(imgCurrent, 0, -offset, targetWidth, targetHeight);
+                                ctx.drawImage(imgNext, 0, targetHeight - offset, targetWidth, targetHeight);
+                            } else if (tType === 3) { 
+                                ctx.globalAlpha = 1 - easeProgress;
+                                const scale1 = 1 + (easeProgress * 0.2);
+                                ctx.drawImage(imgCurrent, -targetWidth*(scale1-1)/2, -targetHeight*(scale1-1)/2, targetWidth*scale1, targetHeight*scale1);
+                                
+                                ctx.globalAlpha = easeProgress;
+                                const scale2 = 1.2 - (easeProgress * 0.2); 
+                                ctx.drawImage(imgNext, -targetWidth*(scale2-1)/2, -targetHeight*(scale2-1)/2, targetWidth*scale2, targetHeight*scale2);
+                                ctx.globalAlpha = 1;
+                            }
                         }
+                        requestAnimationFrame(drawFrame);
+                    }
+                    requestAnimationFrame(drawFrame);
+
+                    const blob = await recordingPromise;
+                    
+                    if (blob.size > 28 * 1024 * 1024) {
+                        showError("Perhatian: Ukuran file sedikit melebihi target 28MB.");
                     }
 
-                    requestAnimationFrame(drawFrame);
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Slideshow_${Math.floor(10000 + Math.random() * 90000)}.${ext}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 100);
+
+                } catch (error) {
+                    console.error("Gagal membuat video:", error);
+                    showError("Terjadi kesalahan saat memproses video. Browser Anda mungkin tidak mendukung fitur MediaRecorder ini.");
+                } finally {
+                    if(ldSt) { ldSt.classList.add('hidden'); ldSt.classList.remove('flex'); }
+                    if(grCont) { grCont.classList.remove('hidden'); grCont.classList.add('flex'); }
+
+                    downloadVideoBtn.innerHTML = originalContent;
+                    if(lucide) lucide.createIcons({root: downloadVideoBtn});
+                    downloadVideoBtn.disabled = false;
+                    downloadVideoBtn.classList.remove('opacity-75', 'cursor-not-allowed');
                 }
+            });
+        }
 
-                // Mulai render
-                requestAnimationFrame(drawFrame);
-
-                // Tunggu proses rekaman selesai
-                const blob = await recordingPromise;
-                
-                // Pastikan batas ukuran aman (28MB)
-                if (blob.size > 28 * 1024 * 1024) {
-                    showError("Perhatian: Ukuran file sedikit melebihi target 28MB.");
-                }
-
-                // Trigger Download
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Slideshow_${Math.floor(10000 + Math.random() * 90000)}.${ext}`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 100);
-
-            } catch (error) {
-                console.error("Gagal membuat video:", error);
-                showError("Terjadi kesalahan saat memproses video. Browser Anda mungkin tidak mendukung fitur MediaRecorder ini.");
-            } finally {
-                // Kembalikan UI
-                document.getElementById('loadingState').classList.add('hidden');
-                document.getElementById('loadingState').classList.remove('flex');
-                document.getElementById('gridContent').classList.remove('hidden');
-                document.getElementById('gridContent').classList.add('flex');
-
-                downloadVideoBtn.innerHTML = originalContent;
-                lucide.createIcons({root: downloadVideoBtn});
-                downloadVideoBtn.disabled = false;
-                downloadVideoBtn.classList.remove('opacity-75', 'cursor-not-allowed');
-            }
-        });
-
-        // ------------------ Logika UI Kartu Potongan & Custom Upload Tiap Panel ------------------
         function createPieceUI(dataUrl, pieceIndex, x, y, fileName, th) {
             let posisi = "";
             if (x === 0 && y === 0) posisi = "Urutan 1 (Kiri Atas)";
@@ -1821,7 +1857,6 @@ USP / Keunggulan Unik: ${usp}`;
             img.className = 'w-full h-auto object-cover aspect-[1080/' + th + ']';
             img.alt = `Potongan ${pieceIndex}`;
 
-            // Overlay Upload Manual
             const overlay = document.createElement('label');
             overlay.className = 'absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer';
             overlay.innerHTML = `
@@ -1833,7 +1868,6 @@ USP / Keunggulan Unik: ${usp}`;
             const fileInput = overlay.querySelector('input');
             const btnDownload = document.createElement('a'); 
             
-            // Logika Proses Gambar Pengganti
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -1860,7 +1894,6 @@ USP / Keunggulan Unik: ${usp}`;
                         
                         ctx.drawImage(repImg, sx, sy, sWidth, sHeight, 0, 0, 1080, th);
                         
-                        // Timpa Logo jika 9:16 aktif (Opsional, agar logo tetap muncul di atas gambar baru)
                         if(state.gridAspectRatio === '9:16') {
                             ['company', 'brand', 'ig'].forEach(type => {
                                 if(logos[type].active) {
@@ -1885,7 +1918,6 @@ USP / Keunggulan Unik: ${usp}`;
 
                         const newDataUrl = canvas.toDataURL('image/png');
                         
-                        // Perbarui data internal dan antarmuka
                         generatedPieces[pieceIndex - 1].url = newDataUrl;
                         img.src = newDataUrl;
                         btnDownload.href = newDataUrl;
@@ -1916,8 +1948,8 @@ USP / Keunggulan Unik: ${usp}`;
             card.appendChild(infoRow);
             card.appendChild(btnDownload);
             
-            piecesGrid.appendChild(card);
-            lucide.createIcons({ root: card });
+            if(piecesGrid) piecesGrid.appendChild(card);
+            if(lucide) lucide.createIcons({ root: card });
         }
 
 
@@ -1925,15 +1957,6 @@ USP / Keunggulan Unik: ${usp}`;
            HELPER BERSAMA
            =================================================================== */
         
-        function formatDisplayText(text) {
-            if (!text) return '';
-            text = text.replace(/[*_#`]/g, '');
-            text = text.replace(/  +/g, ' ');
-            text = text.replace(/^ +/gm, '');
-            text = text.replace(/\n{3,}/g, '\n\n');
-            return text.trim();
-        }
-
         window.fallbackCopy = function(text, btnElementId, isIconOnly = false) {
             const btn = document.getElementById(btnElementId);
             if (!btn) return;
@@ -1956,18 +1979,21 @@ USP / Keunggulan Unik: ${usp}`;
             } else {
                 btn.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i> <span class="text-emerald-400 font-bold ml-1">Tersalin!</span>`;
             }
-            lucide.createIcons({ root: btn });
+            if(lucide) lucide.createIcons({ root: btn });
             
             setTimeout(() => { 
                 btn.innerHTML = originalHTML; 
-                lucide.createIcons({ root: btn });
+                if(lucide) lucide.createIcons({ root: btn });
             }, 2000);
         };
 
-        document.getElementById('copyGambarBtn').addEventListener('click', () => fallbackCopy(state.generatedPromptGambar, 'copyGambarBtn', false));
+        const copyGbBtn = document.getElementById('copyGambarBtn');
+        if(copyGbBtn) copyGbBtn.addEventListener('click', () => fallbackCopy(state.generatedPromptGambar, 'copyGambarBtn', false));
 
         function renderDeskripsiResult() {
             if(!state.generatedPromptSeo) return;
+            const descContent = document.getElementById('deskripsiContent');
+            if(!descContent) return;
 
             const html = `
                 <div class="flex flex-col h-full min-h-[450px]">
@@ -1984,11 +2010,11 @@ USP / Keunggulan Unik: ${usp}`;
                 </div>
             `;
 
-            document.getElementById('deskripsiContent').innerHTML = html;
-            lucide.createIcons({ root: document.getElementById('deskripsiContent') });
+            descContent.innerHTML = html;
+            if(lucide) lucide.createIcons({ root: descContent });
         }
 
-        // Tampilkan Mode Visual Sebagai Default Saat Pertama Kali
+        // INIT CALL
         if(state.generatedPromptSeo || state.generatedPromptGambar) {
             switchMode(state.activeTab);
             if(state.generatedPromptSeo) renderDeskripsiResult();

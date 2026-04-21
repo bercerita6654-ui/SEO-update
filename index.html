@@ -223,7 +223,7 @@
                             <input type="text" id="visualPropsInput" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm" placeholder="Contoh: Cipratan air, Daun monstera..."/>
                         </div>
 
-                        <div class="flex items-center p-3 bg-blue-50 border border-blue-100 rounded-xl mt-2 transition-all">
+                        <div id="multiAngleToggleContainer" class="flex items-center p-3 bg-blue-50 border border-blue-100 rounded-xl mt-2 transition-all">
                             <input type="checkbox" id="multiAngle" class="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded cursor-pointer accent-blue-600"/>
                             <label for="multiAngle" class="ml-3 cursor-pointer">
                                 <span class="text-sm font-bold text-blue-900 flex items-center">
@@ -739,6 +739,23 @@
                 if (posterInput) posterInput.classList.remove('hidden');
             }
             if(lucide) lucide.createIcons({ root: btnProduct.parentElement });
+
+            // Toggle visibility of Multi Angle based on mode
+            const multiAngleToggle = document.getElementById('multiAngleToggleContainer');
+            const multiAngleContainer = document.getElementById('multiAngleContainer');
+            const multiAngleCheck = document.getElementById('multiAngle');
+
+            if (state.subjectMode === 'poster') {
+                if (multiAngleToggle) multiAngleToggle.classList.add('hidden');
+                if (multiAngleContainer) multiAngleContainer.classList.add('hidden');
+            } else {
+                if (multiAngleToggle) multiAngleToggle.classList.remove('hidden');
+                if (multiAngleCheck && multiAngleCheck.checked) {
+                    if (multiAngleContainer) multiAngleContainer.classList.remove('hidden');
+                } else {
+                    if (multiAngleContainer) multiAngleContainer.classList.add('hidden');
+                }
+            }
         }
 
         function saveToStorage() {
@@ -1212,10 +1229,10 @@
                 if (state.subjectMode === 'model') {
                     if (isMulti) {
                         promptGbr = `Create a 4-panel grid photo collage of a person showcasing ${productName}. CRITICAL INSTRUCTION: Maintain 100% absolute character consistency. You MUST strictly PRESERVE the exact original facial structure, eye shape, nose, mouth, jawline, hair, and body shape perfectly from the source image. The face MUST remain absolutely identical to the original input. DO NOT morph, beautify, or alter the person's facial identity in any way.\n\n`;
-                        promptGbr += `1. Panel 1 (${state.angle1}): Standing in a ${state.background}, even soft lighting, looking natural.\n`;
-                        promptGbr += `2. Panel 2 (${state.angle2}): Close-up on the ${productName} worn by the person, shallow depth of field.\n`;
-                        promptGbr += `3. Panel 3 (${state.angle3}): Person interacting in a ${state.background}, accompanied by ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting.\n`;
-                        promptGbr += `4. Panel 4 (${state.angle4}): Dynamic layout, dramatic lighting to provide a premium feel.\n\n`;
+                        promptGbr += `1. Panel 1: Use a ${state.angle1}. Standing in a ${state.background}, even soft lighting, looking natural.\n`;
+                        promptGbr += `2. Panel 2: Use a ${state.angle2}. Close-up on the ${productName} worn by the person, shallow depth of field.\n`;
+                        promptGbr += `3. Panel 3: Use a ${state.angle3}. Person interacting in a ${state.background}, accompanied by ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting.\n`;
+                        promptGbr += `4. Panel 4: Use a ${state.angle4}. Dynamic layout, dramatic lighting to provide a premium feel.\n\n`;
                         promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
                     } else {
                         promptGbr = `Photorealistic portrait of a person showcasing ${productName}. CRITICAL INSTRUCTION: Maintain 100% absolute character consistency. You MUST strictly PRESERVE the exact original facial structure, eye shape, nose, mouth, jawline, hair, and skin tone perfectly. The face MUST remain absolutely identical to the original input. DO NOT morph, beautify, or alter the person's facial identity in any way. Camera Angle: ${state.angle}. `;
@@ -1249,10 +1266,10 @@
                 } else {
                     if (isMulti) {
                         promptGbr = `Create a 4-panel grid photo collage of ${productName} featuring 4 completely different compositions:\n\n`;
-                        promptGbr += `1. Panel 1 (${state.angle1}): Clean solid background, even soft lighting with no harsh shadows, full focus on the entire product. ${state.modelEnable ? `Model is posing naturally.` : ''}\n`;
-                        promptGbr += `2. Panel 2 (${state.angle2}): Highlighting the texture and fine details, shallow depth of field with a beautiful bokeh background. ${state.modelEnable ? `Focusing closely on the ${state.modelPlacement} area of the model.` : ''}\n`;
-                        promptGbr += `3. Panel 3 (${state.angle3}): Product placed on a ${state.background}, accompanied by props like ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting. ${state.modelEnable ? `Model interacting with the product in a lifestyle setting.` : ''}\n`;
-                        promptGbr += `4. Panel 4 (${state.angle4}): Dramatic lighting with harsh shadows to provide a premium and elegant feel. ${state.modelEnable ? `Creative framing emphasizing the product on the model.` : ''}\n\n`;
+                        promptGbr += `1. Panel 1: Use a ${state.angle1}. Clean solid background, even soft lighting with no harsh shadows, full focus on the entire product. ${state.modelEnable ? `Model is posing naturally.` : ''}\n`;
+                        promptGbr += `2. Panel 2: Use a ${state.angle2}. Highlighting the texture and fine details, shallow depth of field with a beautiful bokeh background. ${state.modelEnable ? `Focusing closely on the ${state.modelPlacement} area of the model.` : ''}\n`;
+                        promptGbr += `3. Panel 3: Use a ${state.angle3}. Product placed on a ${state.background}, accompanied by props like ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting. ${state.modelEnable ? `Model interacting with the product in a lifestyle setting.` : ''}\n`;
+                        promptGbr += `4. Panel 4: Use a ${state.angle4}. Dramatic lighting with harsh shadows to provide a premium and elegant feel. ${state.modelEnable ? `Creative framing emphasizing the product on the model.` : ''}\n\n`;
                         if (state.modelEnable) promptGbr += `Model details: ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model.\n`;
                         promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
                     } else {

@@ -76,16 +76,48 @@
                     <div id="menuVisual" class="space-y-5">
                         
                         <!-- Mode Subjek -->
-                        <div class="flex p-1 bg-slate-100 rounded-xl mb-2 border border-slate-200">
+                        <div class="flex flex-col sm:flex-row p-1 bg-slate-100 rounded-xl mb-2 border border-slate-200 gap-1">
                             <button id="modeProduct" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-sm transition-all outline-none">
                                 <i data-lucide="box" class="w-4 h-4"></i> Fokus Produk
                             </button>
                             <button id="modeModel" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-700 transition-all outline-none">
-                                <i data-lucide="user-square-2" class="w-4 h-4"></i> Fokus Model (Kunci Identitas)
+                                <i data-lucide="user-square-2" class="w-4 h-4"></i> Fokus Model
+                            </button>
+                            <button id="modePoster" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-700 transition-all outline-none">
+                                <i data-lucide="layout-template" class="w-4 h-4"></i> Fokus Poster
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Input Khusus Poster -->
+                        <div id="posterTextContainer" class="hidden">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1 mt-2">Teks Pada Poster (Typografi)</label>
+                            <input type="text" id="posterTextInput" class="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-lg outline-none text-sm placeholder-indigo-300 font-semibold mb-3" placeholder="Contoh: BIG SALE 50%, NEW ARRIVAL..."/>
+                            
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Template Warna Poster</label>
+                            <div class="flex gap-2">
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="posterColorTheme" value="default" class="peer hidden" checked>
+                                    <div class="border border-slate-200 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 rounded-lg p-2 flex items-center justify-center h-full text-xs font-bold text-slate-500 peer-checked:text-indigo-700 transition-all">
+                                        Ikuti Tema Bawaan
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="posterColorTheme" value="palette_ceria" class="peer hidden">
+                                    <div class="border border-slate-200 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 rounded-lg p-2 flex flex-col items-center justify-center gap-1.5 transition-all">
+                                        <span class="text-[10px] font-bold text-slate-500 peer-checked:text-indigo-700">Palet Ceria</span>
+                                        <div class="flex">
+                                            <div class="w-4 h-4 rounded-full bg-[#00ACDF] border border-slate-100 shadow-sm z-10"></div>
+                                            <div class="w-4 h-4 rounded-full bg-[#D4F6FF] -ml-1 border border-slate-100 shadow-sm z-20"></div>
+                                            <div class="w-4 h-4 rounded-full bg-[#2696E4] -ml-1 border border-slate-100 shadow-sm z-30"></div>
+                                            <div class="w-4 h-4 rounded-full bg-[#FFEA86] -ml-1 border border-slate-100 shadow-sm z-40"></div>
+                                            <div class="w-4 h-4 rounded-full bg-[#FFF8DB] -ml-1 border border-slate-100 shadow-sm z-50"></div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                             <div>
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Gaya Visual</label>
                                 <div id="dropdown-style"></div>
@@ -222,7 +254,7 @@
                             id="generateSeoBtn"
                             class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 group outline-none mt-2"
                         >
-                            <i data-lucide="sparkles" class="w-5 h-5 group-hover:animate-pulse"></i>
+                            <i data-lucide="sparkles" id="btnIconSeo" class="w-5 h-5 group-hover:animate-pulse"></i>
                             <span>Generate Prompt SEO</span>
                         </button>
                     </div>
@@ -575,6 +607,8 @@
             gridAspectRatio: '1:1', 
             generatedPromptGambar: '',
             generatedPromptSeo: '', 
+            posterText: '',
+            posterColorTheme: 'default',
             activeTab: 'visual'
         };
 
@@ -617,13 +651,26 @@
         function updateSubjectModeUI() {
             const btnProduct = document.getElementById('modeProduct');
             const btnModel = document.getElementById('modeModel');
-            if (!btnProduct || !btnModel) return;
+            const btnPoster = document.getElementById('modePoster');
+            const posterInput = document.getElementById('posterTextContainer');
+            if (!btnProduct || !btnModel || !btnPoster) return;
+            
+            const activeClass = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold bg-white text-blue-600 shadow-sm transition-all outline-none";
+            const inactiveClass = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-700 transition-all outline-none";
+            
+            btnProduct.className = inactiveClass;
+            btnModel.className = inactiveClass;
+            btnPoster.className = inactiveClass;
+            
+            if (posterInput) posterInput.classList.add('hidden');
+
             if (state.subjectMode === 'product') {
-                btnProduct.className = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-sm transition-all outline-none";
-                btnModel.className = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold text-slate-500 hover:text-slate-700 transition-all outline-none";
-            } else {
-                btnProduct.className = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-700 transition-all outline-none";
-                btnModel.className = "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] sm:text-xs font-bold bg-white text-blue-600 shadow-sm transition-all outline-none";
+                btnProduct.className = activeClass;
+            } else if (state.subjectMode === 'model') {
+                btnModel.className = activeClass;
+            } else if (state.subjectMode === 'poster') {
+                btnPoster.className = activeClass;
+                if (posterInput) posterInput.classList.remove('hidden');
             }
             if(lucide) lucide.createIcons({ root: btnProduct.parentElement });
         }
@@ -637,6 +684,8 @@
                 unitInput: document.getElementById('unitInput')?.value || '',
                 seoUspInput: document.getElementById('seoUspInput')?.value || '',
                 visualPropsInput: document.getElementById('visualPropsInput')?.value || '',
+                posterText: document.getElementById('posterTextInput')?.value || '',
+                posterColorTheme: document.querySelector('input[name="posterColorTheme"]:checked')?.value || 'default',
                 multiAngle: document.getElementById('multiAngle')?.checked || false,
                 state: state
             };
@@ -658,6 +707,12 @@
                     safeSetVal('unitInput', data.unitInput || '');
                     safeSetVal('seoUspInput', data.seoUspInput || '');
                     safeSetVal('visualPropsInput', data.visualPropsInput || '');
+                    safeSetVal('posterTextInput', data.posterText || '');
+                    
+                    if (data.posterColorTheme) {
+                        const radio = document.querySelector(`input[name="posterColorTheme"][value="${data.posterColorTheme}"]`);
+                        if(radio) radio.checked = true;
+                    }
                     
                     const mAng = document.getElementById('multiAngle');
                     if (mAng) mAng.checked = data.multiAngle || false;
@@ -683,10 +738,11 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            ['productName', 'brandInput', 'typeInput', 'sizeInput', 'unitInput', 'seoUspInput', 'visualPropsInput'].forEach(id => {
+            ['productName', 'brandInput', 'typeInput', 'sizeInput', 'unitInput', 'seoUspInput', 'visualPropsInput', 'posterTextInput'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.addEventListener('input', saveToStorage);
             });
+            document.querySelectorAll('input[name="posterColorTheme"]').forEach(el => el.addEventListener('change', saveToStorage));
             const mAng = document.getElementById('multiAngle');
             if(mAng) mAng.addEventListener('change', saveToStorage);
         });
@@ -766,6 +822,9 @@
         
         const mdMod = document.getElementById('modeModel');
         if(mdMod) mdMod.addEventListener('click', () => { state.subjectMode = 'model'; updateSubjectModeUI(); saveToStorage(); });
+
+        const mdPoster = document.getElementById('modePoster');
+        if(mdPoster) mdPoster.addEventListener('click', () => { state.subjectMode = 'poster'; updateSubjectModeUI(); saveToStorage(); });
 
         const modelEnableCheck = document.getElementById('modelEnable');
         const modelContainer = document.getElementById('modelContainer');
@@ -1047,10 +1106,12 @@
             genVisBtn.addEventListener('click', () => {
                 const pnEl = document.getElementById('productName');
                 const vpEl = document.getElementById('visualPropsInput');
+                const ptEl = document.getElementById('posterTextInput');
                 const maEl = document.getElementById('multiAngle');
                 
                 const productName = pnEl ? pnEl.value : '';
                 const propsVal = (vpEl && vpEl.value) ? vpEl.value : '-';
+                const posterTextVal = (ptEl && ptEl.value) ? ptEl.value : 'SALE';
                 const isMulti = maEl ? maEl.checked : false;
 
                 if (!productName.trim()) {
@@ -1079,6 +1140,29 @@
                         promptGbr += `Style: ${state.style}. Vibe: ${state.vibe}. Setting: Placed in a ${state.background}. Lighting: Illuminated by ${state.lighting}. Color Palette: ${state.color}. `;
                         if (propsVal !== '-' && propsVal !== '') promptGbr += `Additional elements: Featuring ${propsVal}. `;
                         promptGbr += `Highly detailed, 8k resolution, photorealistic masterpiece, realistic skin texture, raw photo.`;
+                    }
+                } else if (state.subjectMode === 'poster') {
+                    const selectedPalette = document.querySelector('input[name="posterColorTheme"]:checked')?.value || 'default';
+                    let paletteContext = `Color Palette is ${state.color}.`;
+                    
+                    if (selectedPalette === 'palette_ceria') {
+                        paletteContext = `STRICT COLOR PALETTE: You MUST strictly use the following hex colors: Cyan Blue (#00ACDF), Pale Cyan (#D4F6FF), Royal Blue (#2696E4), Yellow (#FFEA86), and Pale Yellow (#FFF8DB).`;
+                    }
+
+                    if (isMulti) {
+                        promptGbr = `Create a 4-panel grid of different commercial promotional poster designs for "${productName}". CRITICAL INSTRUCTION: All 4 panels MUST feature the exact text/typography: "${posterTextVal}" seamlessly integrated into the graphic design.\n\n`;
+                        promptGbr += `1. Minimalist Layout: Clean ${state.background} with lots of negative space for the text "${posterTextVal}".\n`;
+                        promptGbr += `2. Dynamic Layout: Dramatic ${state.angle} angle, bold text overlay "${posterTextVal}".\n`;
+                        promptGbr += `3. Lifestyle Context: Product on a ${state.background} with ${propsVal !== '-' && propsVal !== '' ? propsVal : 'aesthetic elements'}. The text "${posterTextVal}" interacts with the scene.\n`;
+                        promptGbr += `4. Macro Detail: Close up shot, elegant subtle typography displaying "${posterTextVal}".\n\n`;
+                        if (state.modelEnable) promptGbr += `Include a ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model presenting the product.\n`;
+                        promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, ${paletteContext} 8k, masterpiece, professional advertising graphic design, visually striking.`;
+                    } else {
+                        promptGbr = `A stunning, high-quality commercial promotional poster for "${productName}". CRITICAL INSTRUCTION: The poster prominently features the typography/text: "${posterTextVal}" written in a stylish, bold, and readable font that seamlessly blends with the composition. `;
+                        if (state.modelEnable) promptGbr += `The poster includes a ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model holding or presenting the product. `;
+                        promptGbr += `Camera Angle: ${state.angle}. Style: ${state.style}. Vibe: ${state.vibe}. Setting: Placed in a ${state.background}. Lighting: ${state.lighting}. ${paletteContext} `;
+                        if (propsVal !== '-' && propsVal !== '') promptGbr += `Additional elements: Featuring ${propsVal}. `;
+                        promptGbr += `Masterpiece, 8k resolution, professional advertising photography, highly striking graphic design layout.`;
                     }
                 } else {
                     if (isMulti) {

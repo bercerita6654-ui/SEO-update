@@ -232,6 +232,27 @@
                             </label>
                         </div>
 
+                        <!-- Panel Pilihan 4 Angle (Akan muncul saat checkbox aktif) -->
+                        <div id="multiAngleContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2 p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
+                            <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest block mb-1 sm:col-span-2 border-b border-blue-200 pb-2">Pilih Sudut Kamera (Angle) Grid</p>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Panel 1 (Kiri Atas)</label>
+                                <div id="dropdown-angle1"></div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Panel 2 (Kanan Atas)</label>
+                                <div id="dropdown-angle2"></div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Panel 3 (Kiri Bawah)</label>
+                                <div id="dropdown-angle3"></div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Panel 4 (Kanan Bawah)</label>
+                                <div id="dropdown-angle4"></div>
+                            </div>
+                        </div>
+
                         <button 
                             id="generateVisualBtn"
                             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 group outline-none mt-2"
@@ -637,6 +658,10 @@
             lighting: VISUAL_OPTIONS.lighting[0].value,
             color: VISUAL_OPTIONS.color[0].value,
             angle: VISUAL_OPTIONS.angle[0].value,
+            angle1: VISUAL_OPTIONS.angle[1].value, // Default Panel 1: Front Angle
+            angle2: VISUAL_OPTIONS.angle[3].value, // Default Panel 2: Close-Up
+            angle3: VISUAL_OPTIONS.angle[0].value, // Default Panel 3: Eye-Level
+            angle4: VISUAL_OPTIONS.angle[2].value, // Default Panel 4: Top View
             modelEnable: false,
             modelGender: VISUAL_OPTIONS.modelGender[0].value,
             modelAge: VISUAL_OPTIONS.modelAge[0].value,
@@ -791,19 +816,20 @@
         /* ===================================================================
            UI RENDERERS (Dropdowns, Buttons, dll)
            =================================================================== */
-        function createDropdown(containerId, dataKey) {
+        function createDropdown(containerId, dataKey, optionKey = null) {
             const container = document.getElementById(containerId);
             if (!container) return;
-            const options = VISUAL_OPTIONS[dataKey];
+            const optKey = optionKey || dataKey;
+            const options = VISUAL_OPTIONS[optKey];
             let isOpen = false;
 
             const render = () => {
-                const selectedOpt = options.find(o => o.value === state[dataKey]);
+                const selectedOpt = options.find(o => o.value === state[dataKey]) || options[0];
                 container.innerHTML = `
                     <div class="relative">
                         <button type="button" class="dropdown-btn w-full px-3 py-2 border border-slate-300 rounded-lg bg-white flex items-center justify-between focus:ring-2 focus:ring-blue-500 outline-none hover:border-blue-400 transition-colors">
                             <div class="flex items-center space-x-2">
-                                <i data-lucide="${selectedOpt.icon}" class="w-3.5 h-3.5 ${dataKey.startsWith('model') ? 'text-rose-600' : 'text-blue-600'}"></i>
+                                <i data-lucide="${selectedOpt.icon}" class="w-3.5 h-3.5 ${optKey.startsWith('model') ? 'text-rose-600' : 'text-blue-600'}"></i>
                                 <span class="text-slate-700 font-medium text-xs truncate">${selectedOpt.label}</span>
                             </div>
                             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}"></i>
@@ -813,12 +839,12 @@
                             <div class="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto py-1">
                                 ${options.map(opt => {
                                     const isSelected = state[dataKey] === opt.value;
-                                    const activeBg = dataKey.startsWith('model') ? 'bg-rose-50/50' : 'bg-blue-50/50';
-                                    const activeText = dataKey.startsWith('model') ? 'text-rose-700' : 'text-blue-700';
+                                    const activeBg = optKey.startsWith('model') ? 'bg-rose-50/50' : 'bg-blue-50/50';
+                                    const activeText = optKey.startsWith('model') ? 'text-rose-700' : 'text-blue-700';
                                     
                                     return `
                                     <button type="button" data-value="${opt.value}" class="dropdown-item w-full px-3 py-2 text-left flex items-center space-x-2 hover:bg-slate-50 transition-colors ${isSelected ? activeBg : ''}">
-                                        <i data-lucide="${opt.icon}" class="w-3.5 h-3.5 ${isSelected ? (dataKey.startsWith('model') ? 'text-rose-600' : 'text-blue-600') : 'text-slate-400'}"></i>
+                                        <i data-lucide="${opt.icon}" class="w-3.5 h-3.5 ${isSelected ? (optKey.startsWith('model') ? 'text-rose-600' : 'text-blue-600') : 'text-slate-400'}"></i>
                                         <span class="text-xs ${isSelected ? 'font-bold ' + activeText : 'text-slate-700'}">${opt.label}</span>
                                     </button>
                                 `}).join('')}
@@ -852,6 +878,11 @@
         createDropdown('dropdown-lighting', 'lighting');
         createDropdown('dropdown-color', 'color');
         createDropdown('dropdown-angle', 'angle');
+        
+        createDropdown('dropdown-angle1', 'angle1', 'angle');
+        createDropdown('dropdown-angle2', 'angle2', 'angle');
+        createDropdown('dropdown-angle3', 'angle3', 'angle');
+        createDropdown('dropdown-angle4', 'angle4', 'angle');
         
         createDropdown('dropdown-modelGender', 'modelGender');
         createDropdown('dropdown-modelAge', 'modelAge');
@@ -969,15 +1000,25 @@
 
         const multiAngleCheck = document.getElementById('multiAngle');
         const angleContainer = document.getElementById('angle-container');
-        if(multiAngleCheck && angleContainer) {
+        const multiAngleContainer = document.getElementById('multiAngleContainer');
+        
+        if(multiAngleCheck && angleContainer && multiAngleContainer) {
             multiAngleCheck.addEventListener('change', (e) => {
                 if (e.target.checked) {
-                    angleContainer.classList.add('opacity-50', 'pointer-events-none');
+                    angleContainer.classList.add('hidden');
+                    multiAngleContainer.classList.remove('hidden');
                 } else {
-                    angleContainer.classList.remove('opacity-50', 'pointer-events-none');
+                    angleContainer.classList.remove('hidden');
+                    multiAngleContainer.classList.add('hidden');
                 }
             });
-            if(multiAngleCheck.checked) { angleContainer.classList.add('opacity-50', 'pointer-events-none'); }
+            if(multiAngleCheck.checked) { 
+                angleContainer.classList.add('hidden'); 
+                multiAngleContainer.classList.remove('hidden');
+            } else {
+                angleContainer.classList.remove('hidden'); 
+                multiAngleContainer.classList.add('hidden');
+            }
         }
 
         /* ===================================================================
@@ -1171,10 +1212,10 @@
                 if (state.subjectMode === 'model') {
                     if (isMulti) {
                         promptGbr = `Create a 4-panel grid photo collage of a person showcasing ${productName}. CRITICAL INSTRUCTION: Maintain 100% absolute character consistency. You MUST strictly PRESERVE the exact original facial structure, eye shape, nose, mouth, jawline, hair, and body shape perfectly from the source image. The face MUST remain absolutely identical to the original input. DO NOT morph, beautify, or alter the person's facial identity in any way.\n\n`;
-                        promptGbr += `1. Full Portrait: Standing in a ${state.background}, even soft lighting, looking natural.\n`;
-                        promptGbr += `2. Detail Shot: Close-up on the ${productName} worn by the person, shallow depth of field.\n`;
-                        promptGbr += `3. Lifestyle Context: Person interacting in a ${state.background}, accompanied by ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting.\n`;
-                        promptGbr += `4. Creative Angle: Dynamic ${state.angle}, dramatic lighting to provide a premium feel.\n\n`;
+                        promptGbr += `1. Panel 1 (${state.angle1}): Standing in a ${state.background}, even soft lighting, looking natural.\n`;
+                        promptGbr += `2. Panel 2 (${state.angle2}): Close-up on the ${productName} worn by the person, shallow depth of field.\n`;
+                        promptGbr += `3. Panel 3 (${state.angle3}): Person interacting in a ${state.background}, accompanied by ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting.\n`;
+                        promptGbr += `4. Panel 4 (${state.angle4}): Dynamic layout, dramatic lighting to provide a premium feel.\n\n`;
                         promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
                     } else {
                         promptGbr = `Photorealistic portrait of a person showcasing ${productName}. CRITICAL INSTRUCTION: Maintain 100% absolute character consistency. You MUST strictly PRESERVE the exact original facial structure, eye shape, nose, mouth, jawline, hair, and skin tone perfectly. The face MUST remain absolutely identical to the original input. DO NOT morph, beautify, or alter the person's facial identity in any way. Camera Angle: ${state.angle}. `;
@@ -1192,10 +1233,10 @@
 
                     if (isMulti) {
                         promptGbr = `Create a 4-panel grid of different commercial promotional poster designs for "${productName}". CRITICAL INSTRUCTION: All 4 panels MUST feature the exact text/typography: "${posterTextVal}" seamlessly integrated into the graphic design.\n\n`;
-                        promptGbr += `1. Minimalist Layout: Clean ${state.background} with lots of negative space for the text "${posterTextVal}".\n`;
-                        promptGbr += `2. Dynamic Layout: Dramatic ${state.angle} angle, bold text overlay "${posterTextVal}".\n`;
-                        promptGbr += `3. Lifestyle Context: Product on a ${state.background} with ${propsVal !== '-' && propsVal !== '' ? propsVal : 'aesthetic elements'}. The text "${posterTextVal}" interacts with the scene.\n`;
-                        promptGbr += `4. Macro Detail: Close up shot, elegant subtle typography displaying "${posterTextVal}".\n\n`;
+                        promptGbr += `1. Panel 1 (${state.angle1}): Minimalist Layout, clean ${state.background} with lots of negative space for the text "${posterTextVal}".\n`;
+                        promptGbr += `2. Panel 2 (${state.angle2}): Dynamic Layout, bold text overlay "${posterTextVal}".\n`;
+                        promptGbr += `3. Panel 3 (${state.angle3}): Lifestyle Context, product on a ${state.background} with ${propsVal !== '-' && propsVal !== '' ? propsVal : 'aesthetic elements'}. The text "${posterTextVal}" interacts with the scene.\n`;
+                        promptGbr += `4. Panel 4 (${state.angle4}): Macro Detail, elegant subtle typography displaying "${posterTextVal}".\n\n`;
                         if (state.modelEnable) promptGbr += `Include a ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model presenting the product.\n`;
                         promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, ${paletteContext} 8k, masterpiece, professional advertising graphic design, visually striking.`;
                     } else {
@@ -1208,10 +1249,10 @@
                 } else {
                     if (isMulti) {
                         promptGbr = `Create a 4-panel grid photo collage of ${productName} featuring 4 completely different compositions:\n\n`;
-                        promptGbr += `1. Main Catalog: Straight front view, clean solid background, even soft lighting with no harsh shadows, full focus on the entire product. ${state.modelEnable ? `Model is posing naturally.` : ''}\n`;
-                        promptGbr += `2. Macro Detail: Extreme close-up shot highlighting the texture and fine details, shallow depth of field with a beautiful bokeh background. ${state.modelEnable ? `Focusing closely on the ${state.modelPlacement} area of the model.` : ''}\n`;
-                        promptGbr += `3. Lifestyle Context: Product placed on a ${state.background}, accompanied by props like ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting. ${state.modelEnable ? `Model interacting with the product in a lifestyle setting.` : ''}\n`;
-                        promptGbr += `4. Creative Angle: Top-down flat lay or dynamic low angle, dramatic lighting with harsh shadows to provide a premium and elegant feel. ${state.modelEnable ? `Creative framing emphasizing the product on the model.` : ''}\n\n`;
+                        promptGbr += `1. Panel 1 (${state.angle1}): Clean solid background, even soft lighting with no harsh shadows, full focus on the entire product. ${state.modelEnable ? `Model is posing naturally.` : ''}\n`;
+                        promptGbr += `2. Panel 2 (${state.angle2}): Highlighting the texture and fine details, shallow depth of field with a beautiful bokeh background. ${state.modelEnable ? `Focusing closely on the ${state.modelPlacement} area of the model.` : ''}\n`;
+                        promptGbr += `3. Panel 3 (${state.angle3}): Product placed on a ${state.background}, accompanied by props like ${propsVal !== '-' && propsVal !== '' ? propsVal : 'minimalist aesthetic elements'}. Natural window sunlight lighting. ${state.modelEnable ? `Model interacting with the product in a lifestyle setting.` : ''}\n`;
+                        promptGbr += `4. Panel 4 (${state.angle4}): Dramatic lighting with harsh shadows to provide a premium and elegant feel. ${state.modelEnable ? `Creative framing emphasizing the product on the model.` : ''}\n\n`;
                         if (state.modelEnable) promptGbr += `Model details: ${state.modelAge} ${state.modelEthnicity} ${state.modelGender} model.\n`;
                         promptGbr += `General aesthetic: Style is ${state.style}, Vibe is ${state.vibe}, Color palette is ${state.color}. Highly detailed, 8k resolution, photorealistic commercial photography masterpiece.`;
                     } else {

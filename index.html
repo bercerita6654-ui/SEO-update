@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator Prompt, SEO, & Grid Maker</title>
+    <title>Generator Prompt, SEO, Caption, & Grid Maker</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -33,7 +33,7 @@
                 </div>
                 <div>
                     <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">MarketBoost <span class="text-blue-600">AI</span></h1>
-                    <p class="text-slate-500 mt-1 text-sm">Alat E-Commerce Lengkap: Visual AI, Copywriting SEO, & Pemotong Grid.</p>
+                    <p class="text-slate-500 mt-1 text-sm">Alat E-Commerce: Visual AI, Copywriting SEO, Sosmed Caption, & Grid.</p>
                 </div>
             </div>
         </div>
@@ -57,10 +57,13 @@
                 <!-- TABS & MENU KONTROL -->
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                     
-                    <!-- Mode Navigasi Kiri (3 Tab) -->
-                    <div class="flex p-1 bg-slate-100 rounded-xl mb-6">
+                    <!-- Mode Navigasi Kiri (4 Tab) -->
+                    <div class="grid grid-cols-2 sm:flex sm:flex-row p-1 bg-slate-100 rounded-xl mb-6 gap-1">
                         <button id="navVisual" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs sm:text-sm font-bold bg-white text-blue-600 shadow-sm transition-all outline-none">
                             <i data-lucide="image" class="w-4 h-4"></i> Visual
+                        </button>
+                        <button id="navCaption" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs sm:text-sm font-bold text-slate-500 hover:text-slate-700 transition-all outline-none">
+                            <i data-lucide="message-square" class="w-4 h-4"></i> Caption
                         </button>
                         <button id="navSeo" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs sm:text-sm font-bold text-slate-500 hover:text-slate-700 transition-all outline-none">
                             <i data-lucide="shopping-bag" class="w-4 h-4"></i> SEO
@@ -263,7 +266,73 @@
                     </div>
 
                     <!-- ==========================================
-                         MENU 2: COPYWRITING SEO
+                         MENU BARU: CAPTION SOSMED
+                         ========================================== -->
+                    <div id="menuCaption" class="space-y-5 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Platform Target</label>
+                                <select id="captionPlatform" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm">
+                                    <option value="Instagram">Instagram</option>
+                                    <option value="TikTok">TikTok</option>
+                                    <option value="Facebook">Facebook</option>
+                                    <option value="Twitter/X">Twitter/X</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Tujuan Postingan</label>
+                                <select id="captionGoal" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm">
+                                    <option value="Hard Selling (Jualan langsung untuk konversi)">Hard Selling (Jualan)</option>
+                                    <option value="Soft Selling (Edukasi atau Storytelling)">Soft Selling</option>
+                                    <option value="Engagement (Interaksi audiens, memancing komentar)">Interaksi / Engagement</option>
+                                    <option value="Giveaway / Promosi Khusus / Diskon Besar">Giveaway / Promo Khusus</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Gaya Bahasa (Tone)</label>
+                                <select id="captionTone" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm">
+                                    <option value="Santai, Gaul, dan Akrab (Ala Gen-Z)">Santai & Gaul</option>
+                                    <option value="Profesional, Sopan, dan Elegan">Profesional & Elegan</option>
+                                    <option value="Lucu, Humor, dan Menghibur">Lucu & Menghibur</option>
+                                    <option value="Inspiratif, Emosional, dan Menyentuh">Inspiratif</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Panjang Caption</label>
+                                <select id="captionLength" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm">
+                                    <option value="Singkat (1-2 Paragraf padat dan jelas)">Singkat</option>
+                                    <option value="Sedang (3-4 Paragraf dengan struktur rapi)">Sedang</option>
+                                    <option value="Panjang (Microblogging atau Storytelling detail)">Panjang (Storytelling)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Kata Kunci (Global dengan SEO) -->
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Kata Kunci Utama / Topik (Max 5)</label>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="keywordInputCap" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-pink-400" placeholder="Ketik lalu Enter... (Sama dengan SEO)"/>
+                                <button id="addKeywordBtnCap" class="bg-slate-800 text-white px-3 rounded-lg hover:bg-slate-700"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                            </div>
+                            <div id="keywordTagsListCap" class="flex flex-wrap gap-2"></div>
+                        </div>
+                        
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Info Promo / Pesan Tambahan</label>
+                            <input type="text" id="captionExtra" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm" placeholder="Contoh: Diskon 50% hari ini, Beli 1 Gratis 1, Link di Bio..."/>
+                        </div>
+
+                        <button 
+                            id="generateCaptionBtn"
+                            class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 group outline-none mt-2"
+                        >
+                            <i data-lucide="sparkles" class="w-5 h-5 group-hover:animate-pulse"></i>
+                            <span>Generate Prompt Caption</span>
+                        </button>
+                    </div>
+
+                    <!-- ==========================================
+                         MENU 3: COPYWRITING SEO
                          ========================================== -->
                     <div id="menuSeo" class="space-y-5 hidden">
                         
@@ -322,7 +391,7 @@
                     </div>
 
                     <!-- ==========================================
-                         MENU 3: PEMOTONG GRID & VIDEO
+                         MENU 4: PEMOTONG GRID & VIDEO
                          ========================================== -->
                     <div id="menuGrid" class="space-y-5 hidden">
                         <div class="p-5 bg-indigo-50 border border-indigo-100 rounded-2xl">
@@ -454,6 +523,10 @@
                                 <i data-lucide="image" class="w-4 h-4"></i>
                                 <span class="hidden sm:inline">Hasil Visual</span><span class="sm:hidden">Visual</span>
                             </button>
+                            <button id="tabCaptionOut" class="flex items-center space-x-2 px-4 py-2 bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded-xl text-sm font-bold transition-colors border border-transparent outline-none">
+                                <i data-lucide="message-square" class="w-4 h-4"></i>
+                                <span class="hidden sm:inline">Hasil Caption</span><span class="sm:hidden">Caption</span>
+                            </button>
                             <button id="tabDeskripsi" class="flex items-center space-x-2 px-4 py-2 bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded-xl text-sm font-bold transition-colors border border-transparent outline-none">
                                 <i data-lucide="shopping-bag" class="w-4 h-4"></i>
                                 <span class="hidden sm:inline">Hasil SEO</span><span class="sm:hidden">SEO</span>
@@ -494,6 +567,11 @@
                             readonly
                             class="w-full h-full min-h-[450px] bg-slate-800/50 text-slate-200 border border-slate-700 rounded-xl p-4 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none font-mono text-sm leading-relaxed"
                         ></textarea>
+                    </div>
+
+                    <!-- KONTEN: PROMPT CAPTION SOSMED -->
+                    <div id="captionContent" class="hidden flex-grow flex-col h-full">
+                        <!-- Akan diisi melalui JavaScript -->
                     </div>
 
                     <!-- KONTEN: DESKRIPSI SEO -->
@@ -673,6 +751,7 @@
             gridAspectRatio: '1:1', 
             generatedPromptGambar: '',
             generatedPromptSeo: '', 
+            generatedPromptCaption: '',
             posterText: '',
             posterColorTheme: 'default',
             activeTab: 'visual'
@@ -770,6 +849,13 @@
                 posterText: document.getElementById('posterTextInput')?.value || '',
                 posterColorTheme: document.querySelector('input[name="posterColorTheme"]:checked')?.value || 'default',
                 multiAngle: document.getElementById('multiAngle')?.checked || false,
+                
+                captionPlatform: document.getElementById('captionPlatform')?.value || 'Instagram',
+                captionGoal: document.getElementById('captionGoal')?.value || 'Hard Selling (Jualan langsung untuk konversi)',
+                captionTone: document.getElementById('captionTone')?.value || 'Santai, Gaul, dan Akrab (Ala Gen-Z)',
+                captionLength: document.getElementById('captionLength')?.value || 'Sedang (3-4 Paragraf dengan struktur rapi)',
+                captionExtra: document.getElementById('captionExtra')?.value || '',
+
                 state: state
             };
             try {
@@ -791,6 +877,12 @@
                     safeSetVal('seoUspInput', data.seoUspInput || '');
                     safeSetVal('visualPropsInput', data.visualPropsInput || '');
                     safeSetVal('posterTextInput', data.posterText || '');
+
+                    safeSetVal('captionPlatform', data.captionPlatform || 'Instagram');
+                    safeSetVal('captionGoal', data.captionGoal || 'Hard Selling (Jualan langsung untuk konversi)');
+                    safeSetVal('captionTone', data.captionTone || 'Santai, Gaul, dan Akrab (Ala Gen-Z)');
+                    safeSetVal('captionLength', data.captionLength || 'Sedang (3-4 Paragraf dengan struktur rapi)');
+                    safeSetVal('captionExtra', data.captionExtra || '');
                     
                     if (data.posterColorTheme) {
                         const radio = document.querySelector(`input[name="posterColorTheme"][value="${data.posterColorTheme}"]`);
@@ -821,7 +913,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            ['productName', 'brandInput', 'typeInput', 'sizeInput', 'unitInput', 'seoUspInput', 'visualPropsInput', 'posterTextInput'].forEach(id => {
+            ['productName', 'brandInput', 'typeInput', 'sizeInput', 'unitInput', 'seoUspInput', 'visualPropsInput', 'posterTextInput', 'captionPlatform', 'captionGoal', 'captionTone', 'captionLength', 'captionExtra'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.addEventListener('input', saveToStorage);
             });
@@ -954,33 +1046,48 @@
         window.setMarketplace = (id) => { state.marketplace = id; renderMarketplace(); saveToStorage(); };
         renderMarketplace();
 
+        const keywordInputCap = document.getElementById('keywordInputCap');
+        const addKeywordBtnCap = document.getElementById('addKeywordBtnCap');
+        const keywordTagsListCap = document.getElementById('keywordTagsListCap');
+        
         const keywordInput = document.getElementById('keywordInput');
         const addKeywordBtn = document.getElementById('addKeywordBtn');
         const keywordTagsList = document.getElementById('keywordTagsList');
 
         function renderKeywords() {
-            if(!keywordTagsList) return;
-            keywordTagsList.innerHTML = state.keywords.map((kw, i) => `
+            const htmlStr = state.keywords.map((kw, i) => `
                 <span class="keyword-pill px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-md border border-emerald-200 flex items-center gap-1">
                     ${kw} <button type="button" onclick="removeKeyword(${i})" class="hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button>
                 </span>
             `).join('');
-            if(lucide) lucide.createIcons({ root: keywordTagsList });
+
+            if(keywordTagsList) {
+                keywordTagsList.innerHTML = htmlStr;
+                if(lucide) lucide.createIcons({ root: keywordTagsList });
+            }
+            if(keywordTagsListCap) {
+                keywordTagsListCap.innerHTML = htmlStr;
+                if(lucide) lucide.createIcons({ root: keywordTagsListCap });
+            }
         }
         window.removeKeyword = (index) => { state.keywords.splice(index, 1); renderKeywords(); saveToStorage(); };
         
-        function addKeyword() {
-            if(!keywordInput) return;
-            const val = keywordInput.value.trim();
+        function addKeyword(valToUse) {
+            const val = valToUse.trim();
             if (val && !state.keywords.includes(val) && state.keywords.length < 5) {
                 state.keywords.push(val);
-                keywordInput.value = '';
+                if(keywordInput) keywordInput.value = '';
+                if(keywordInputCap) keywordInputCap.value = '';
                 renderKeywords();
                 saveToStorage();
             }
         }
-        if(addKeywordBtn) addKeywordBtn.addEventListener('click', addKeyword);
-        if(keywordInput) keywordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addKeyword(); });
+        if(addKeywordBtn) addKeywordBtn.addEventListener('click', () => { if(keywordInput) addKeyword(keywordInput.value) });
+        if(keywordInput) keywordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addKeyword(keywordInput.value); });
+        
+        if(addKeywordBtnCap) addKeywordBtnCap.addEventListener('click', () => { if(keywordInputCap) addKeyword(keywordInputCap.value) });
+        if(keywordInputCap) keywordInputCap.addEventListener('keypress', (e) => { if (e.key === 'Enter') addKeyword(keywordInputCap.value); });
+
         renderKeywords();
 
         const RATIOS = [
@@ -1103,10 +1210,11 @@
 
             const isVis = mode === 'visual';
             const isSeo = mode === 'seo';
+            const isCap = mode === 'caption';
             const isGrid = mode === 'grid';
 
-            const activeNavClass = "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs sm:text-sm font-bold bg-white shadow-sm transition-all outline-none";
-            const inactiveNavClass = "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs sm:text-sm font-bold text-slate-500 hover:text-slate-700 transition-all outline-none";
+            const activeNavClass = "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] sm:text-xs font-bold bg-white shadow-sm transition-all outline-none";
+            const inactiveNavClass = "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] sm:text-xs font-bold text-slate-500 hover:text-slate-700 transition-all outline-none";
             const activeTabClass = "flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors outline-none";
             const inactiveTabClass = "flex items-center space-x-2 px-4 py-2 bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded-xl text-sm font-bold transition-colors border border-transparent outline-none";
 
@@ -1120,27 +1228,35 @@
             // Mod Nav Kiri
             setClass('navVisual', inactiveNavClass);
             setClass('navSeo', inactiveNavClass);
+            setClass('navCaption', inactiveNavClass);
             setClass('navGrid', inactiveNavClass);
+            
             if (isVis) setClass('navVisual', activeNavClass + " text-blue-600");
             if (isSeo) setClass('navSeo', activeNavClass + " text-emerald-600");
+            if (isCap) setClass('navCaption', activeNavClass + " text-pink-600");
             if (isGrid) setClass('navGrid', activeNavClass + " text-indigo-600");
 
             // Mod Display Menu
             setStyle('menuVisual', 'display', isVis ? 'block' : 'none');
             setStyle('menuSeo', 'display', isSeo ? 'block' : 'none');
+            setStyle('menuCaption', 'display', isCap ? 'block' : 'none');
             setStyle('menuGrid', 'display', isGrid ? 'block' : 'none');
 
             // Mod Tabs Kanan
             setClass('tabGambar', inactiveTabClass);
             setClass('tabDeskripsi', inactiveTabClass);
+            setClass('tabCaptionOut', inactiveTabClass);
             setClass('tabGrid', inactiveTabClass);
+            
             if (isVis) setClass('tabGambar', activeTabClass + " bg-blue-500/20 text-blue-400 border border-blue-500/30");
             if (isSeo) setClass('tabDeskripsi', activeTabClass + " bg-emerald-500/20 text-emerald-400 border border-emerald-500/30");
+            if (isCap) setClass('tabCaptionOut', activeTabClass + " bg-pink-500/20 text-pink-400 border border-pink-500/30");
             if (isGrid) setClass('tabGrid', activeTabClass + " bg-indigo-500/20 text-indigo-400 border border-indigo-500/30");
 
             // Hide everything first
             addClass('gambarContent', 'hidden'); rmClass('gambarContent', 'flex');
             addClass('deskripsiContent', 'hidden'); rmClass('deskripsiContent', 'flex');
+            addClass('captionContent', 'hidden'); rmClass('captionContent', 'flex');
             addClass('gridContent', 'hidden'); rmClass('gridContent', 'flex');
             addClass('loadingState', 'hidden'); rmClass('loadingState', 'flex');
             addClass('emptyState', 'hidden'); rmClass('emptyState', 'flex');
@@ -1170,6 +1286,14 @@
                     setText('emptyDesc', "Isi parameter di Menu SEO dan klik tombol Generate untuk meracik Prompt SEO Anda.");
                     rmClass('emptyState', 'hidden'); addClass('emptyState', 'flex');
                 }
+            } else if (isCap) {
+                if (state.generatedPromptCaption) {
+                    rmClass('captionContent', 'hidden'); addClass('captionContent', 'flex');
+                } else {
+                    setText('emptyTitle', "Belum Ada Prompt Caption");
+                    setText('emptyDesc', "Isi parameter di Menu Caption dan klik tombol Generate untuk meracik Prompt Caption Sosmed Anda.");
+                    rmClass('emptyState', 'hidden'); addClass('emptyState', 'flex');
+                }
             } else if (isGrid) {
                 if (generatedPieces.length > 0) {
                     rmClass('gridContent', 'hidden'); addClass('gridContent', 'flex');
@@ -1187,6 +1311,8 @@
         if(navVis) navVis.addEventListener('click', () => switchMode('visual'));
         const navSeo = document.getElementById('navSeo');
         if(navSeo) navSeo.addEventListener('click', () => switchMode('seo'));
+        const navCap = document.getElementById('navCaption');
+        if(navCap) navCap.addEventListener('click', () => switchMode('caption'));
         const navGrid = document.getElementById('navGrid');
         if(navGrid) navGrid.addEventListener('click', () => switchMode('grid'));
         
@@ -1194,6 +1320,8 @@
         if(tbGbr) tbGbr.addEventListener('click', () => switchMode('visual'));
         const tbDesc = document.getElementById('tabDeskripsi');
         if(tbDesc) tbDesc.addEventListener('click', () => switchMode('seo'));
+        const tbCapOut = document.getElementById('tabCaptionOut');
+        if(tbCapOut) tbCapOut.addEventListener('click', () => switchMode('caption'));
         const tbGrid = document.getElementById('tabGrid');
         if(tbGrid) tbGrid.addEventListener('click', () => switchMode('grid'));
 
@@ -1379,7 +1507,57 @@ USP / Keunggulan Unik: ${usp}`;
         }
 
         /* ===================================================================
-           SISTEM 3: AUTO CUT GRID & LOGO (CANVAS LOKAL & PNG DOWNLOADER)
+           SISTEM 3: GENERATE PROMPT CAPTION SOSMED
+           =================================================================== */
+        const genCapBtn = document.getElementById('generateCaptionBtn');
+        if(genCapBtn) {
+            genCapBtn.addEventListener('click', () => {
+                const pnEl = document.getElementById('productName');
+                const ptEl = document.getElementById('captionPlatform');
+                const cgEl = document.getElementById('captionGoal');
+                const ctEl = document.getElementById('captionTone');
+                const clEl = document.getElementById('captionLength');
+                const cxEl = document.getElementById('captionExtra');
+
+                const productName = pnEl ? pnEl.value : '';
+                const platform = ptEl ? ptEl.value : 'Instagram';
+                const goal = cgEl ? cgEl.value : 'Hard Selling';
+                const tone = ctEl ? ctEl.value : 'Santai';
+                const length = clEl ? clEl.value : 'Sedang';
+                const extra = cxEl ? cxEl.value : '-';
+
+                if (!productName.trim()) {
+                    showError("Mohon isi Nama Utama Produk terlebih dahulu.");
+                    return;
+                }
+                hideError();
+
+                const promptCaption = `Anda adalah seorang Social Media Specialist dan Copywriter profesional. Buatkan draft caption untuk postingan media sosial dengan detail berikut:
+
+TARGET PLATFORM: ${platform}
+NAMA PRODUK: ${productName}
+TUJUAN POSTINGAN: ${goal}
+GAYA BAHASA: ${tone}
+PANJANG CAPTION: ${length}
+KATA KUNCI / HASHTAG TARGET: ${state.keywords.length > 0 ? state.keywords.join(', ') : '-'}
+INFO TAMBAHAN / PROMO: ${extra}
+
+TUGAS ANDA:
+1. Buat caption yang menarik, interaktif, dan formatnya dioptimalkan untuk algoritma platform ${platform} (misalnya jika Instagram/TikTok beri jarak antar paragraf yang jelas, dll).
+2. Gunakan teknik copywriting yang memancing interaksi (misal: gunakan Hook yang kuat di awal kalimat, body copy yang relevan, dan Call-to-Action / CTA yang jelas di akhir).
+3. Sertakan beberapa hashtag (tagar) yang relevan, populer, dan spesifik untuk produk tersebut di akhir caption.
+4. Gunakan emoji secukupnya agar teks lebih hidup, namun tetap profesional sesuai gaya bahasanya.
+
+Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya bisa memilih yang terbaik. Pisahkan setiap opsi dengan jelas menggunakan pembatas "---------------------".`;
+
+                state.generatedPromptCaption = promptCaption;
+                renderCaptionResult();
+                switchMode('caption');
+            });
+        }
+
+        /* ===================================================================
+           SISTEM 4: AUTO CUT GRID & LOGO (CANVAS LOKAL & PNG DOWNLOADER)
            =================================================================== */
         const imageUpload = document.getElementById('imageUpload');
         const originalPreviewContainer = document.getElementById('originalPreviewContainer');
@@ -2181,33 +2359,58 @@ USP / Keunggulan Unik: ${usp}`;
         if(copyGbBtn) copyGbBtn.addEventListener('click', () => fallbackCopy(state.generatedPromptGambar, 'copyGambarBtn', false));
 
         function renderDeskripsiResult() {
-            if(!state.generatedPromptSeo) return;
-            const descContent = document.getElementById('deskripsiContent');
-            if(!descContent) return;
+            if(state.generatedPromptSeo) {
+                const descContent = document.getElementById('deskripsiContent');
+                if(descContent) {
+                    const html = `
+                        <div class="flex flex-col h-full min-h-[450px]">
+                            <div class="flex justify-between items-center mb-3">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prompt Copywriting SEO</label>
+                                <button id="copyPromptSeoBtn" onclick="fallbackCopy(state.generatedPromptSeo, 'copyPromptSeoBtn', false)" class="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 outline-none bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 w-fit transition-colors">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> <span>Salin Prompt</span>
+                                </button>
+                            </div>
+                            <textarea 
+                                readonly
+                                class="w-full flex-grow min-h-[400px] bg-slate-800/50 text-slate-200 border border-slate-700 rounded-xl p-4 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none font-mono text-sm leading-relaxed"
+                            >${state.generatedPromptSeo}</textarea>
+                        </div>
+                    `;
+                    descContent.innerHTML = html;
+                    if(lucide) lucide.createIcons({ root: descContent });
+                }
+            }
+        }
 
-            const html = `
-                <div class="flex flex-col h-full min-h-[450px]">
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prompt Copywriting SEO</label>
-                        <button id="copyPromptSeoBtn" onclick="fallbackCopy(state.generatedPromptSeo, 'copyPromptSeoBtn', false)" class="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 outline-none bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 w-fit transition-colors">
-                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> <span>Salin Prompt</span>
-                        </button>
-                    </div>
-                    <textarea 
-                        readonly
-                        class="w-full flex-grow min-h-[400px] bg-slate-800/50 text-slate-200 border border-slate-700 rounded-xl p-4 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none font-mono text-sm leading-relaxed"
-                    >${state.generatedPromptSeo}</textarea>
-                </div>
-            `;
-
-            descContent.innerHTML = html;
-            if(lucide) lucide.createIcons({ root: descContent });
+        function renderCaptionResult() {
+            if(state.generatedPromptCaption) {
+                const capContent = document.getElementById('captionContent');
+                if(capContent) {
+                    const html = `
+                        <div class="flex flex-col h-full min-h-[450px]">
+                            <div class="flex justify-between items-center mb-3">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prompt Caption Sosmed</label>
+                                <button id="copyPromptCapBtn" onclick="fallbackCopy(state.generatedPromptCaption, 'copyPromptCapBtn', false)" class="text-xs font-bold text-pink-400 hover:text-pink-300 flex items-center gap-1.5 outline-none bg-pink-500/10 px-3 py-1.5 rounded-lg border border-pink-500/20 w-fit transition-colors">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> <span>Salin Prompt</span>
+                                </button>
+                            </div>
+                            <textarea 
+                                readonly
+                                class="w-full flex-grow min-h-[400px] bg-slate-800/50 text-slate-200 border border-slate-700 rounded-xl p-4 focus:outline-none focus:ring-1 focus:ring-pink-500 resize-none font-mono text-sm leading-relaxed"
+                            >${state.generatedPromptCaption}</textarea>
+                        </div>
+                    `;
+                    capContent.innerHTML = html;
+                    if(lucide) lucide.createIcons({ root: capContent });
+                }
+            }
         }
 
         // INIT CALL
-        if(state.generatedPromptSeo || state.generatedPromptGambar) {
+        if(state.generatedPromptSeo || state.generatedPromptGambar || state.generatedPromptCaption) {
             switchMode(state.activeTab);
             if(state.generatedPromptSeo) renderDeskripsiResult();
+            if(state.generatedPromptCaption) renderCaptionResult();
         } else {
             switchMode('visual');
         }

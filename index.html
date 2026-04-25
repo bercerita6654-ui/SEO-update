@@ -1948,19 +1948,22 @@ Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya 
                             return () => {
                                 const uiCanvas = document.getElementById(`gridCanvas-${index}`);
                                 if(uiCanvas) {
-                                    const cw = uiCanvas.clientWidth || 300;
-                                    const ch = uiCanvas.clientHeight || 300;
-                                    uiCanvas.width = cw;
-                                    uiCanvas.height = ch;
+                                    const targetWidth = 1080;
+                                    const targetHeight = state.gridAspectRatio === '9:16' ? 1920 : (state.gridAspectRatio === '3:4' ? 1440 : 1080);
                                     
-                                    const baseScale = Math.max(cw / imgPiece.width, ch / imgPiece.height);
+                                    uiCanvas.width = targetWidth;
+                                    uiCanvas.height = targetHeight;
+                                    
+                                    const scaleX = targetWidth / imgPiece.width;
+                                    const scaleY = targetHeight / imgPiece.height;
+                                    const baseScale = Math.max(scaleX, scaleY);
                                     
                                     // Set data di array
                                     gridPiecesData[index] = {
                                         img: imgPiece,
                                         zoom: 1,
-                                        panX: cw / 2,
-                                        panY: ch / 2,
+                                        panX: targetWidth / 2,
+                                        panY: targetHeight / 2,
                                         baseScale: baseScale
                                     };
                                     
@@ -2077,17 +2080,21 @@ Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya 
                 if(!file) return;
                 const img = new Image();
                 img.onload = () => {
-                    const cw = canvas.clientWidth || 300;
-                    const ch = canvas.clientHeight || 300;
-                    canvas.width = cw;
-                    canvas.height = ch;
+                    const targetWidth = 1080;
+                    const targetHeight = state.gridAspectRatio === '9:16' ? 1920 : (state.gridAspectRatio === '3:4' ? 1440 : 1080);
                     
-                    const baseScale = Math.max(cw / img.width, ch / img.height);
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+                    
+                    const scaleX = targetWidth / img.width;
+                    const scaleY = targetHeight / img.height;
+                    const baseScale = Math.max(scaleX, scaleY);
+
                     gridPiecesData[i] = {
                         img: img,
                         zoom: 1,
-                        panX: cw / 2,
-                        panY: ch / 2,
+                        panX: targetWidth / 2,
+                        panY: targetHeight / 2,
                         baseScale: baseScale
                     };
                     showGridImage(i);
@@ -2152,13 +2159,12 @@ Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya 
             const data = gridPiecesData[i];
             if(!data || !data.img) return;
 
-            // Ensure canvas sizing is correct relative to CSS display
-            const cw = canvas.clientWidth;
-            const ch = canvas.clientHeight;
-            if(canvas.width !== cw || canvas.height !== ch) {
-                canvas.width = cw;
-                canvas.height = ch;
-                data.baseScale = Math.max(cw / data.img.width, ch / data.img.height);
+            const targetWidth = 1080;
+            const targetHeight = state.gridAspectRatio === '9:16' ? 1920 : (state.gridAspectRatio === '3:4' ? 1440 : 1080);
+            
+            if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
             }
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2191,18 +2197,12 @@ Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya 
             tempCanvas.height = targetHeight;
             const ctx = tempCanvas.getContext('2d');
 
-            const previewCanvas = document.getElementById(`gridCanvas-${i}`);
-            if(!previewCanvas) return;
-
-            const ratioX = targetWidth / previewCanvas.width;
-            const ratioY = targetHeight / previewCanvas.height;
-
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, targetWidth, targetHeight);
 
             ctx.save();
-            ctx.translate(data.panX * ratioX, data.panY * ratioY);
-            ctx.scale(data.baseScale * data.zoom * ratioX, data.baseScale * data.zoom * ratioY);
+            ctx.translate(data.panX, data.panY);
+            ctx.scale(data.baseScale * data.zoom, data.baseScale * data.zoom);
             ctx.drawImage(data.img, -data.img.width/2, -data.img.height/2);
             ctx.restore();
             
@@ -2223,18 +2223,12 @@ Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya 
             canvas.height = targetHeight;
             const ctx = canvas.getContext('2d');
 
-            const previewCanvas = document.getElementById(`gridCanvas-${i}`);
-            if(!previewCanvas) return null;
-
-            const ratioX = targetWidth / previewCanvas.width;
-            const ratioY = targetHeight / previewCanvas.height;
-
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, targetWidth, targetHeight);
 
             ctx.save();
-            ctx.translate(data.panX * ratioX, data.panY * ratioY);
-            ctx.scale(data.baseScale * data.zoom * ratioX, data.baseScale * data.zoom * ratioY);
+            ctx.translate(data.panX, data.panY);
+            ctx.scale(data.baseScale * data.zoom, data.baseScale * data.zoom);
             ctx.drawImage(data.img, -data.img.width/2, -data.img.height/2);
             ctx.restore();
 

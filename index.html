@@ -33,7 +33,7 @@
                 </div>
                 <div>
                     <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">MarketBoost <span class="text-blue-600">AI</span></h1>
-                    <p class="text-slate-500 mt-1 text-sm">Alat E-Commerce: Visual AI, Copywriting SEO, Sosmed Caption, & Grid.</p>
+                    <p class="text-slate-500 mt-1 text-sm">Alat E-Commerce: Visual AI, Copywriting SEO, Sosmed Caption, & Grid Collage.</p>
                 </div>
             </div>
         </div>
@@ -581,19 +581,22 @@
                                         <p class="text-[10px] text-slate-400" id="gridResultLabel">Unggah, geser, perbesar & unduh</p>
                                     </div>
                                 </div>
-                                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-wrap justify-end">
+                                    <button id="downloadCollageBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 outline-none shadow-md">
+                                        <i data-lucide="layout" class="w-3.5 h-3.5"></i> <span>Unduh Collage (1 Gambar)</span>
+                                    </button>
                                     <button id="downloadAllBtn" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 outline-none border border-slate-600">
-                                        <i data-lucide="download" class="w-3.5 h-3.5"></i> <span>Unduh Semua (PNG)</span>
+                                        <i data-lucide="download" class="w-3.5 h-3.5"></i> <span>Unduh Satuan</span>
                                     </button>
                                     <button id="downloadVideoBtn" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 outline-none shadow-md">
-                                        <i data-lucide="video" class="w-3.5 h-3.5"></i> <span>Unduh Video (MP4)</span>
+                                        <i data-lucide="video" class="w-3.5 h-3.5"></i> <span>Unduh Video</span>
                                     </button>
                                 </div>
                             </div>
                             
                             <p class="text-[11px] text-indigo-300 mb-4 bg-indigo-900/30 p-3 rounded-xl border border-indigo-500/20 flex items-start sm:items-center gap-2 leading-relaxed">
                                 <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5 sm:mt-0"></i> 
-                                Klik pada slot untuk mengunggah gambar. Anda bisa menggeser dan memperbesar gambar tersebut menggunakan slider yang muncul saat kursor diarahkan ke kotak.
+                                Klik pada slot untuk mengunggah gambar. Anda bisa menggeser dan memperbesar gambar tersebut menggunakan slider yang muncul saat kursor diarahkan ke kotak. Anda dapat mengunduhnya menjadi satu gambar utuh (Collage) atau terpisah.
                             </p>
 
                             <!-- Grid Cards -->
@@ -2114,6 +2117,76 @@ Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya 
             }
 
             return canvas.toDataURL('image/png', 0.9); // Quality 0.9 to keep size decent
+        }
+
+        const downloadCollageBtn = document.getElementById('downloadCollageBtn');
+        if (downloadCollageBtn) {
+            downloadCollageBtn.addEventListener('click', async function() {
+                const cols = parseInt(document.getElementById('gridCols')?.value) || 2;
+                const rows = parseInt(document.getElementById('gridRows')?.value) || 2;
+                const total = cols * rows;
+                
+                // Cek apakah minimal ada 1 gambar yang terunggah
+                const hasImage = gridPiecesData.some(d => d && d.img);
+                if (!hasImage) {
+                    showError("Harap unggah minimal 1 gambar ke dalam slot grid.");
+                    return;
+                }
+
+                const originalContent = downloadCollageBtn.innerHTML;
+                downloadCollageBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> <span>Memproses...</span>';
+                if(lucide) lucide.createIcons({root: downloadCollageBtn});
+                downloadCollageBtn.disabled = true;
+                downloadCollageBtn.classList.add('opacity-75', 'cursor-not-allowed');
+
+                try {
+                    const targetWidth = 1080;
+                    const targetHeight = state.gridAspectRatio === '9:16' ? 1920 : (state.gridAspectRatio === '3:4' ? 1440 : 1080);
+                    
+                    // Buat canvas besar yang akan menggabungkan semua gambar
+                    const collageCanvas = document.createElement('canvas');
+                    collageCanvas.width = targetWidth * cols;
+                    collageCanvas.height = targetHeight * rows;
+                    const ctx = collageCanvas.getContext('2d');
+
+                    ctx.fillStyle = '#ffffff'; 
+                    ctx.fillRect(0, 0, collageCanvas.width, collageCanvas.height);
+
+                    let pieceIndex = 0;
+                    for (let y = 0; y < rows; y++) {
+                        for (let x = 0; x < cols; x++) {
+                            const url = getHighResDataUrl(pieceIndex);
+                            if (url) {
+                                const img = await new Promise((resolve) => {
+                                    const tempImg = new Image();
+                                    tempImg.onload = () => resolve(tempImg);
+                                    tempImg.src = url;
+                                });
+                                // Gambar per bagian pada koordinat yang sesuai
+                                ctx.drawImage(img, x * targetWidth, y * targetHeight, targetWidth, targetHeight);
+                            }
+                            pieceIndex++;
+                        }
+                    }
+
+                    const collageUrl = collageCanvas.toDataURL('image/png', 0.9);
+                    const link = document.createElement('a');
+                    link.href = collageUrl;
+                    link.download = `Collage_${cols}x${rows}_${Math.floor(10000 + Math.random() * 90000)}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                } catch (error) {
+                    console.error("Gagal membuat collage:", error);
+                    showError("Terjadi kesalahan saat membuat Collage gambar.");
+                } finally {
+                    downloadCollageBtn.innerHTML = originalContent;
+                    if(lucide) lucide.createIcons({root: downloadCollageBtn});
+                    downloadCollageBtn.disabled = false;
+                    downloadCollageBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                }
+            });
         }
 
         if(downloadAllBtn) {

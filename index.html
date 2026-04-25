@@ -399,6 +399,19 @@
                                 <!-- Diisi oleh JS -->
                             </div>
 
+                            <!-- Pilihan Matrix Grid (Baris x Kolom) -->
+                            <label class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest block mb-2 text-center">Custom Jumlah Potongan</label>
+                            <div class="grid grid-cols-2 gap-3 mb-4 max-w-xs mx-auto">
+                                <div>
+                                    <label class="text-[9px] font-bold text-indigo-400 uppercase block mb-1 text-center">Kolom (Horizontal)</label>
+                                    <input type="number" id="gridCols" min="1" max="10" value="2" class="w-full px-3 py-2 bg-white border border-indigo-200 text-indigo-900 rounded-lg outline-none text-sm font-bold text-center shadow-sm transition-all focus:ring-2 focus:ring-indigo-400"/>
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-bold text-indigo-400 uppercase block mb-1 text-center">Baris (Vertikal)</label>
+                                    <input type="number" id="gridRows" min="1" max="10" value="2" class="w-full px-3 py-2 bg-white border border-indigo-200 text-indigo-900 rounded-lg outline-none text-sm font-bold text-center shadow-sm transition-all focus:ring-2 focus:ring-indigo-400"/>
+                                </div>
+                            </div>
+
                             <!-- Area Upload Grid Utama -->
                             <div class="flex flex-col items-center">
                                 <label for="imageUpload" class="cursor-pointer w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold transition duration-200 flex justify-center items-center gap-2 shadow-sm">
@@ -745,6 +758,8 @@
             marketplace: 'shopee',
             keywords: [],
             gridAspectRatio: '1:1', 
+            gridCols: 2,
+            gridRows: 2,
             generatedPromptGambar: '',
             generatedPromptSeo: '', 
             generatedPromptCaption: '',
@@ -845,6 +860,8 @@
                 posterText: document.getElementById('posterTextInput')?.value || '',
                 posterColorTheme: document.querySelector('input[name="posterColorTheme"]:checked')?.value || 'default',
                 multiAngle: document.getElementById('multiAngle')?.checked || false,
+                gridCols: parseInt(document.getElementById('gridCols')?.value) || 2,
+                gridRows: parseInt(document.getElementById('gridRows')?.value) || 2,
                 
                 captionPlatform: document.getElementById('captionPlatform')?.value || 'Instagram',
                 captionGoal: document.getElementById('captionGoal')?.value || 'Hard Selling (Jualan langsung untuk konversi)',
@@ -879,6 +896,8 @@
                     safeSetVal('captionTone', data.captionTone || 'Santai, Gaul, dan Akrab (Ala Gen-Z)');
                     safeSetVal('captionCTA', data.captionCTA || '');
                     safeSetVal('captionExtra', data.captionExtra || '');
+                    safeSetVal('gridCols', data.gridCols || 2);
+                    safeSetVal('gridRows', data.gridRows || 2);
                     
                     if (data.posterColorTheme) {
                         const radio = document.querySelector(`input[name="posterColorTheme"][value="${data.posterColorTheme}"]`);
@@ -909,7 +928,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            ['productName', 'brandInput', 'typeInput', 'sizeInput', 'unitInput', 'seoUspInput', 'visualPropsInput', 'posterTextInput', 'captionPlatform', 'captionGoal', 'captionTone', 'captionCTA', 'captionExtra'].forEach(id => {
+            ['productName', 'brandInput', 'typeInput', 'sizeInput', 'unitInput', 'seoUspInput', 'visualPropsInput', 'posterTextInput', 'captionPlatform', 'captionGoal', 'captionTone', 'captionCTA', 'captionExtra', 'gridCols', 'gridRows'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.addEventListener('input', saveToStorage);
             });
@@ -1894,8 +1913,10 @@ Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya 
 
         function generatePreviewPanel1() {
             if(!loadedImage.src) return;
-            const pieceWidth = Math.floor(loadedImage.width / 2);
-            const pieceHeight = Math.floor(loadedImage.height / 2);
+            const cols = parseInt(document.getElementById('gridCols')?.value) || 2;
+            const rows = parseInt(document.getElementById('gridRows')?.value) || 2;
+            const pieceWidth = Math.floor(loadedImage.width / cols);
+            const pieceHeight = Math.floor(loadedImage.height / rows);
             
             const targetWidth = 1080;
             const targetHeight = 1920;
@@ -1934,16 +1955,18 @@ Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya 
 
                 const width = loadedImage.width;
                 const height = loadedImage.height;
-                const pieceWidth = Math.floor(width / 2);
-                const pieceHeight = Math.floor(height / 2);
+                const cols = parseInt(document.getElementById('gridCols')?.value) || 2;
+                const rows = parseInt(document.getElementById('gridRows')?.value) || 2;
+                const pieceWidth = Math.floor(width / cols);
+                const pieceHeight = Math.floor(height / rows);
                 
                 const targetWidth = 1080;
                 const targetHeight = state.gridAspectRatio === '9:16' ? 1920 : (state.gridAspectRatio === '3:4' ? 1440 : 1080);
                 
                 let pieceCount = 1;
 
-                for (let y = 0; y < 2; y++) {
-                    for (let x = 0; x < 2; x++) {
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
                         const canvas = document.createElement('canvas');
                         canvas.width = targetWidth;
                         canvas.height = targetHeight;
@@ -2205,11 +2228,7 @@ Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya 
         }
 
         function createPieceUI(dataUrl, pieceIndex, x, y, fileName, th) {
-            let posisi = "";
-            if (x === 0 && y === 0) posisi = "Urutan 1 (Kiri Atas)";
-            if (x === 1 && y === 0) posisi = "Urutan 2 (Kanan Atas)";
-            if (x === 0 && y === 1) posisi = "Urutan 3 (Kiri Bawah)";
-            if (x === 1 && y === 1) posisi = "Urutan 4 (Kanan Bawah)";
+            let posisi = `Baris ${y + 1}, Kolom ${x + 1}`;
             
             const card = document.createElement('div');
             card.className = 'bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col items-center shadow-sm relative group overflow-hidden';

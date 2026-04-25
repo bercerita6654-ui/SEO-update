@@ -391,7 +391,7 @@
                          ========================================== -->
                     <div id="menuGrid" class="space-y-5 hidden">
                         <div class="p-5 bg-indigo-50 border border-indigo-100 rounded-2xl">
-                            <p class="text-sm text-indigo-800 mb-4 text-center font-medium">Buat template grid, klik kotak untuk mengunggah foto secara terpisah. Geser atau perbesar foto di dalam kotak sesuai selera Anda.</p>
+                            <p class="text-sm text-indigo-800 mb-4 text-center font-medium">Buat template grid atau Potong Otomatis 1 gambar besar. Geser/perbesar gambar di tiap kotak sesuai selera Anda.</p>
                             
                             <!-- Pilihan Rasio -->
                             <label class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest block mb-2 text-center">Pilih Ukuran Potongan</label>
@@ -412,6 +412,28 @@
                                 </div>
                             </div>
 
+                            <!-- Fitur Upload & Auto Cut Master Image -->
+                            <div class="border-t border-indigo-200 pt-4 mt-4">
+                                <label class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest block mb-2 text-center">Opsi 1: Potong Otomatis (Auto-Cut)</label>
+                                <div class="flex flex-col items-center">
+                                    <label for="imageUpload" class="cursor-pointer w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold transition duration-200 flex justify-center items-center gap-2 shadow-sm">
+                                        <i data-lucide="upload-cloud" class="w-5 h-5"></i> Unggah 1 Gambar Utama
+                                    </label>
+                                    <input type="file" id="imageUpload" accept="image/png, image/jpeg, image/jpg, image/webp" class="hidden" />
+                                </div>
+                                
+                                <!-- Preview Original & Tombol Cut -->
+                                <div id="originalPreviewContainer" class="hidden flex-col items-center mt-4 p-4 bg-white border border-indigo-100 rounded-xl shadow-sm">
+                                    <div class="w-full flex justify-between items-center mb-2">
+                                        <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Preview Utama</h2>
+                                        <p id="imageDimensions" class="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded"></p>
+                                    </div>
+                                    <img id="originalImage" class="max-w-full max-h-40 object-contain rounded-lg border border-slate-200 mb-3" alt="Preview Gambar">
+                                    <button id="cutButton" class="w-full bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition duration-200 flex items-center justify-center gap-2 outline-none">
+                                        <i data-lucide="scissors" class="w-4 h-4"></i> Potong ke Grid & Terapkan
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Fitur Tambah Logo Khusus 9:16 -->
@@ -1847,6 +1869,128 @@ Berikan 2 (dua) opsi variasi caption yang berbeda (Opsi 1 dan Opsi 2) agar saya 
             prevCanvas.addEventListener('touchstart', startDragLogo, {passive: false});
             prevCanvas.addEventListener('touchmove', moveDragLogo, {passive: false});
             prevCanvas.addEventListener('touchend', stopDragLogo);
+        }
+
+        // ==========================
+        // AUTO CUT MASTER IMAGE LOGIC
+        // ==========================
+        const masterUploadInput = document.getElementById('imageUpload');
+        const cutButton = document.getElementById('cutButton');
+
+        if(masterUploadInput) {
+            masterUploadInput.addEventListener('change', function(e) {
+                hideError();
+                const file = e.target.files[0];
+                if (!file) return;
+
+                originalFileName = file.name.split('.').slice(0, -1).join('.') || "image";
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    loadedImage.onload = function() {
+                        const orgImgEl = document.getElementById('originalImage');
+                        const imgDimEl = document.getElementById('imageDimensions');
+                        const orgPrevCont = document.getElementById('originalPreviewContainer');
+                        
+                        if(orgImgEl) orgImgEl.src = loadedImage.src;
+                        if(imgDimEl) imgDimEl.textContent = `${loadedImage.width} x ${loadedImage.height} px`;
+                        if(orgPrevCont) {
+                            orgPrevCont.classList.remove('hidden');
+                            orgPrevCont.classList.add('flex');
+                        }
+                    }
+                    loadedImage.src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+                e.target.value = '';
+            });
+        }
+
+        if(cutButton) {
+            cutButton.addEventListener('click', function() {
+                if (!loadedImage || !loadedImage.src) {
+                    showError("Silakan unggah 1 Gambar Utama terlebih dahulu sebelum memotong.");
+                    return;
+                }
+
+                // 1. Dapatkan Matrix yang dipilih user
+                const cols = parseInt(document.getElementById('gridCols')?.value) || 2;
+                const rows = parseInt(document.getElementById('gridRows')?.value) || 2;
+                const totalPieces = cols * rows;
+
+                // 2. Refresh/Buat Ulang Slot Kosong Sesuai Ukuran Matrix
+                initGridBuilder();
+
+                // 3. Potong Gambar dan Masukkan ke Data Array
+                const pieceWidth = loadedImage.width / cols;
+                const pieceHeight = loadedImage.height / rows;
+
+                let i = 0;
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        // Buat canvas temporary untuk menampung potongan aslinya
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = pieceWidth;
+                        tempCanvas.height = pieceHeight;
+                        const tempCtx = tempCanvas.getContext('2d');
+
+                        tempCtx.drawImage(
+                            loadedImage, 
+                            x * pieceWidth, y * pieceHeight, pieceWidth, pieceHeight, 
+                            0, 0, pieceWidth, pieceHeight
+                        );
+
+                        const croppedDataUrl = tempCanvas.toDataURL('image/png');
+                        
+                        // Konversi kembali menjadi Object Image agar bisa dimanipulasi (zoom/pan) oleh grid UI
+                        const imgPiece = new Image();
+                        imgPiece.onload = ((index) => {
+                            return () => {
+                                const uiCanvas = document.getElementById(`gridCanvas-${index}`);
+                                if(uiCanvas) {
+                                    const cw = uiCanvas.clientWidth || 300;
+                                    const ch = uiCanvas.clientHeight || 300;
+                                    uiCanvas.width = cw;
+                                    uiCanvas.height = ch;
+                                    
+                                    const baseScale = Math.max(cw / imgPiece.width, ch / imgPiece.height);
+                                    
+                                    // Set data di array
+                                    gridPiecesData[index] = {
+                                        img: imgPiece,
+                                        zoom: 1,
+                                        panX: cw / 2,
+                                        panY: ch / 2,
+                                        baseScale: baseScale
+                                    };
+                                    
+                                    // Tampilkan gambar di UI
+                                    showGridImage(index);
+                                    
+                                    // Jika panel 1 dan mode 9:16 aktif, update preview panel
+                                    if(index === 0 && state.gridAspectRatio === '9:16') {
+                                        updatePreviewPanel1FromGrid(index);
+                                    }
+                                }
+                            };
+                        })(i);
+                        imgPiece.src = croppedDataUrl;
+                        i++;
+                    }
+                }
+
+                // 4. Update Tampilan Hasil
+                const resContainer = document.getElementById('resultsContainer');
+                if(resContainer) resContainer.classList.remove('hidden');
+                
+                // Jika menu logo 9:16 aktif dan ini panel pertama, set previewnya (hanya visualisasi tambahan jika diperlukan)
+                if(state.gridAspectRatio === '9:16') {
+                    const lgSec = document.getElementById('logoUploadSection');
+                    if(lgSec) lgSec.classList.remove('hidden');
+                }
+
+                switchMode('grid');
+            });
         }
 
 
